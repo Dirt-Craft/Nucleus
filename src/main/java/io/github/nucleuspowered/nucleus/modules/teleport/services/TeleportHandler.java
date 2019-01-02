@@ -5,11 +5,12 @@
 package io.github.nucleuspowered.nucleus.modules.teleport.services;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import io.github.nucleuspowered.nucleus.NameUtil;
 import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.NucleusPlugin;
 import io.github.nucleuspowered.nucleus.Util;
-import io.github.nucleuspowered.nucleus.dataservices.modular.ModularUserService;
 import io.github.nucleuspowered.nucleus.internal.PermissionRegistry;
 import io.github.nucleuspowered.nucleus.internal.interfaces.CancellableTask;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
@@ -19,12 +20,11 @@ import io.github.nucleuspowered.nucleus.internal.traits.InternalServiceManagerTr
 import io.github.nucleuspowered.nucleus.internal.traits.MessageProviderTrait;
 import io.github.nucleuspowered.nucleus.internal.traits.PermissionTrait;
 import io.github.nucleuspowered.nucleus.internal.userprefs.UserPreferenceService;
-import io.github.nucleuspowered.nucleus.modules.jail.JailModule;
-import io.github.nucleuspowered.nucleus.modules.jail.datamodules.JailUserDataModule;
 import io.github.nucleuspowered.nucleus.modules.teleport.TeleportUserPrefKeys;
 import io.github.nucleuspowered.nucleus.modules.teleport.commands.TeleportAcceptCommand;
 import io.github.nucleuspowered.nucleus.modules.teleport.commands.TeleportDenyCommand;
 import io.github.nucleuspowered.nucleus.modules.teleport.config.TeleportConfigAdapter;
+import io.github.nucleuspowered.nucleus.storage.dataobjects.modular.IUserDataObject;
 import io.github.nucleuspowered.nucleus.util.CauseStackHelper;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandResult;
@@ -37,16 +37,13 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextStyles;
 
+import javax.annotation.Nullable;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
 
 public class TeleportHandler implements MessageProviderTrait, InternalServiceManagerTrait, PermissionTrait, ServiceBase, Reloadable {
 
@@ -54,8 +51,17 @@ public class TeleportHandler implements MessageProviderTrait, InternalServiceMan
     private final Map<UUID, TeleportPrep> ask = new HashMap<>();
     private final String acceptPerm = getPermissionHandlerFor(TeleportAcceptCommand.class).getBase();
     private final String denyPerm = getPermissionHandlerFor(TeleportDenyCommand.class).getBase();
+    private final List<BiFunction<Player, CommandSource, Text>> playerChecks = Lists.newArrayList();
 
     private static final String tptoggleBypassPermission = PermissionRegistry.PERMISSIONS_PREFIX + "teleport.tptoggle.exempt";
+
+    public void registerPlayerCheck(BiFunction<Player, CommandSource, Text> playerPredicate) {
+        this.playerChecks.add(playerPredicate);
+    }
+
+    List<BiFunction<Player, CommandSource, Text>> getPlayerChecks() {
+        return ImmutableList.copyOf(this.playerChecks);
+    }
 
     public TeleportBuilder getBuilder() {
         return new TeleportBuilder();
@@ -398,39 +404,51 @@ public class TeleportHandler implements MessageProviderTrait, InternalServiceMan
                 return false;
             }
 
-            ModularUserService toPlayer = Nucleus.getNucleus().getUserDataManager().get(this.to).get();
-            UserPreferenceService ups = Nucleus.getNucleus().getInternalServiceManager().getServiceUnchecked(UserPreferenceService.class);
-            if (!this.bypassToggle && !ups.get(toPlayer.getUniqueId(), TeleportUserPrefKeys.TELEPORT_TARGETABLE).orElse(true)
-                    && !canBypassTpToggle(source)) {
-                sendMessageTo(source, "teleport.fail.targettoggle", toPlayer.getUser().getName());
+            IUserDataObject userDataObject = Nucleus.getNucleus()
+                    .getStorageManager()
+                    .getUserService()
+                    .getOrNewOnThread(this.from);
+
+            UserPreferenceService ups = Nucleus.getNucleus().getInternalServiceManager()
+                    .getServiceUnchecked(UserPreferenceService.class);
+            boolean target = ups.get(this.to, TeleportUserPrefKeys.TELEPORT_TARGETABLE).orElse(true);
+            NameUtil util = Nucleus.getNucleus().getNameUtil();
+
+            if (!this.bypassToggle && !target && !canBypassTpToggle(source)) {
+                sendMessageTo(source, "teleport.fail.targettoggle",
+                        util.getName(this.to).orElseGet(() -> getMessageFor(source, "standard.unknown")));
                 return false;
             }
 
-            ModularUserService fromPlayer = Nucleus.getNucleus().getUserDataManager().get(this.from).get();
-            if (Nucleus.getNucleus().isModuleLoaded(JailModule.ID) &&
-                    fromPlayer.get(JailUserDataModule.class).getJailData().isPresent()) {
-                // Don't teleport a jailed subject.
-                if (!this.silentSource) {
-                    sendMessageTo(source,"teleport.fail.jailed", fromPlayer.getUser().getName());
+            NameUtil nameUtil = Nucleus.getNucleus().getNameUtil();
+            Optional<Player> fromPlayer = Sponge.getServer().getPlayer(this.from);
+            Optional<Player> toPlayer = Sponge.getServer().getPlayer(this.to);
+            if (!fromPlayer.isPresent()) {
+                sendMessageTo(source, "teleport.fail.offlinenamed", nameUtil.getName(this.from));
+                return false;
+            } else if (!toPlayer.isPresent()) {
+                sendMessageTo(source, "teleport.fail.offlinenamed", nameUtil.getName(this.to));
+                return false;
+            }
+
+            for (BiFunction<Player, CommandSource, Text> test : Nucleus.getNucleus()
+                    .getInternalServiceManager().getServiceUnchecked(TeleportHandler.class)
+                    .getPlayerChecks()) {
+                @Nullable Text result = test.apply(fromPlayer.get(), source);
+                if (result != null) {
+                    if (!this.silentSource) {
+                        source.sendMessage(result);
+                    }
+
+                    return false;
                 }
-
-                return false;
-            }
-
-            if (!fromPlayer.getPlayer().isPresent()) {
-                // failed
-                sendMessageTo(source, "teleport.fail.offlinenamed", fromPlayer.getUser().getName());
-                return false;
-            } else if (!toPlayer.getPlayer().isPresent()) {
-                sendMessageTo(source, "teleport.fail.offlinenamed", toPlayer.getUser().getName());
-                return false;
             }
 
             TeleportTask tt;
             if (this.cost > 0 && this.charge != null) {
                 tt = new TeleportTask(source,
-                        fromPlayer.getPlayer().get(),
-                        toPlayer.getPlayer().get(),
+                        fromPlayer.get(),
+                        toPlayer.get(),
                         Util.getUserFromUUID(this.charge).get(),
                         this.cost,
                         this.safe,
@@ -440,8 +458,8 @@ public class TeleportHandler implements MessageProviderTrait, InternalServiceMan
                 );
             } else {
                 tt = new TeleportTask(source,
-                        fromPlayer.getPlayer().get(),
-                        toPlayer.getPlayer().get(),
+                        fromPlayer.get(),
+                        toPlayer.get(),
                         null,
                         0,
                         this.safe,
@@ -452,7 +470,7 @@ public class TeleportHandler implements MessageProviderTrait, InternalServiceMan
             }
 
             if (this.warmupTime > 0) {
-                sendMessageTo(fromPlayer.getPlayer().get(), "teleport.warmup", this.warmupTime);
+                sendMessageTo(fromPlayer.get(), "teleport.warmup", this.warmupTime);
                 Nucleus.getNucleus().getWarmupManager().addWarmup(
                         this.from, Sponge.getScheduler().createTaskBuilder().delay(this.warmupTime, TimeUnit.SECONDS)
                         .execute(tt).name("NucleusPlugin - Teleport Waiter").submit(Nucleus.getNucleus()));
