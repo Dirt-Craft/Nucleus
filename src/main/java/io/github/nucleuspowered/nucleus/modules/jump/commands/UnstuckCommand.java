@@ -5,6 +5,7 @@
 package io.github.nucleuspowered.nucleus.modules.jump.commands;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanners;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
@@ -12,6 +13,7 @@ import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.internal.teleport.NucleusTeleportHandler;
+import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationHelper;
 import io.github.nucleuspowered.nucleus.modules.jump.JumpModule;
 import io.github.nucleuspowered.nucleus.modules.jump.config.JumpConfig;
 import io.github.nucleuspowered.nucleus.modules.jump.config.JumpConfigAdapter;
@@ -23,6 +25,7 @@ import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.teleport.TeleportHelperFilters;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -44,6 +47,12 @@ public class UnstuckCommand extends AbstractCommand<Player> implements Reloadabl
             throw ReturnMessageException.fromKey("command.unstuck.notneeded");
         }
 
+        if (getServiceUnchecked(NucleusSafeLocationHelper.class).teleportPlayer(
+                src,
+                location,
+                false,
+                TeleportScanners.NO_SCAN,
+                TeleportHelperFilters.DEFAULT).isSuccessful())
         if (NucleusTeleportHandler.setLocation(src, location)) {
             src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithTextFormat("command.unstuck.success"));
             return CommandResult.success();

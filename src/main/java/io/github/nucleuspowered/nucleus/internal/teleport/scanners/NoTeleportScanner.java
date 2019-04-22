@@ -5,6 +5,7 @@
 package io.github.nucleuspowered.nucleus.internal.teleport.scanners;
 
 import com.flowpowered.math.vector.Vector3i;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanner;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.TeleportHelper;

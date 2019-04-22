@@ -2,12 +2,18 @@
  * This file is part of Nucleus, licensed under the MIT License (MIT). See the LICENSE.txt file
  * at the root of this project for more details.
  */
-package io.github.nucleuspowered.nucleus.internal.teleport;
+package io.github.nucleuspowered.nucleus.modules.core.services;
 
 import com.flowpowered.math.vector.Vector3d;
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.service.NucleusSafeTeleportService;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportResult;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportResults;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanner;
+import io.github.nucleuspowered.nucleus.internal.annotations.APIService;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
-import io.github.nucleuspowered.nucleus.internal.teleport.scanners.TeleportScanner;
+import io.github.nucleuspowered.nucleus.internal.interfaces.ServiceBase;
+import io.github.nucleuspowered.nucleus.internal.teleport.NucleusTeleportHandler;
 import io.github.nucleuspowered.nucleus.modules.core.config.CoreConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.core.config.SafeTeleportConfig;
 import io.github.nucleuspowered.nucleus.modules.teleport.events.AboutToTeleportEvent;
@@ -27,16 +33,30 @@ import java.util.Optional;
 import javax.inject.Singleton;
 
 @Singleton
-public class NucleusSafeLocationHelper implements Reloadable {
-
-    private static final NucleusSafeLocationHelper INSTANCE = new NucleusSafeLocationHelper();
-
-    public static NucleusSafeLocationHelper getInstance() {
-        return INSTANCE;
-    }
+@APIService(NucleusSafeTeleportService.class)
+public class NucleusSafeLocationHelper implements NucleusSafeTeleportService, Reloadable, ServiceBase {
 
     private SafeTeleportConfig config = new SafeTeleportConfig();
 
+    @Override
+    public TeleportResult teleportPlayer(Player player,
+            Location<World> location,
+            boolean centreBlock,
+            TeleportScanner scanner,
+            TeleportHelperFilter filter,
+            TeleportHelperFilter... filters) {
+        return teleportPlayer(
+                player,
+                location,
+                player.getRotation(),
+                centreBlock,
+                scanner,
+                filter,
+                filters
+        );
+    }
+
+    @Override
     public TeleportResult teleportPlayer(Player player,
             Location<World> location,
             Vector3d rotation,
@@ -69,7 +89,7 @@ public class NucleusSafeLocationHelper implements Reloadable {
                         ((MessageReceiver) o).sendMessage(x);
                     }
                 });
-                return TeleportResult.FAILED_CANCELLED;
+                return TeleportResults.FAIL_CANCELLED;
             }
 
             Optional<Entity> oe = player.getVehicle();
@@ -88,16 +108,16 @@ public class NucleusSafeLocationHelper implements Reloadable {
 
             if (player.setTransform(targetLocation)) {
                 player.setSpectatorTarget(null);
-                return TeleportResult.SUCCESS;
+                return TeleportResults.SUCCESS;
             }
 
             oe.ifPresent(player::setVehicle);
         }
 
-        return TeleportResult.FAILED_NO_LOCATION;
+        return TeleportResults.FAIL_NO_LOCATION;
     }
 
-    public Optional<Location<World>> getSafeLocation(
+    @Override public Optional<Location<World>> getSafeLocation(
             Location<World> location,
             TeleportScanner scanner,
             TeleportHelperFilter filter,
@@ -113,7 +133,7 @@ public class NucleusSafeLocationHelper implements Reloadable {
         );
     }
 
-    public Optional<Transform<World>> getSafeTransform(
+    @Override public Optional<Transform<World>> getSafeTransform(
             Location<World> location,
             Vector3d rotation,
             TeleportScanner scanner,
