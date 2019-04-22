@@ -20,7 +20,7 @@ public class WallCheckFilter extends FilterBase {
             return Tristate.TRUE;
         }
 
-        return Tristate.UNDEFINED;
+        return Tristate.FALSE;
     }
 
     @Override

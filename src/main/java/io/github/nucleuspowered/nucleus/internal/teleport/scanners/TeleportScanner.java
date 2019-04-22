@@ -5,46 +5,42 @@
 package io.github.nucleuspowered.nucleus.internal.teleport.scanners;
 
 import com.flowpowered.math.vector.Vector3i;
-import org.spongepowered.api.Sponge;
+import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.TeleportHelper;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.teleport.TeleportHelperFilter;
-import org.spongepowered.plugin.meta.util.NonnullByDefault;
 
 import java.util.Optional;
 
-@NonnullByDefault
-public class NoTeleportScanner implements TeleportScanner {
+/**
+ * Scans {@link Location}s for safe teleport locations.
+ */
+public interface TeleportScanner extends CatalogType {
 
-    @Override
-    public Optional<Location<World>> scanFrom(
+    default Optional<Location<World>> scanFrom(
+            World world,
+            Vector3i position,
+            TeleportHelperFilter filter,
+            TeleportHelperFilter... filters) {
+        return scanFrom(
+                world,
+                position,
+                TeleportHelper.DEFAULT_HEIGHT,
+                TeleportHelper.DEFAULT_WIDTH,
+                TeleportHelper.DEFAULT_FLOOR_CHECK_DISTANCE,
+                filter,
+                filters
+        );
+    }
+
+    Optional<Location<World>> scanFrom(
             World world,
             Vector3i position,
             int height,
             int width,
             int floor,
             TeleportHelperFilter filter,
-            TeleportHelperFilter... filters) {
-        TeleportHelper teleportHelper = Sponge.getTeleportHelper();
-        return teleportHelper.getSafeLocation(
-                new Location<>(world, position),
-                height,
-                width,
-                floor,
-                filter,
-                filters
-        );
-    }
-
-    @Override
-    public String getId() {
-        return "nucleus:no_scan";
-    }
-
-    @Override
-    public String getName() {
-        return "Nucleus No Scan";
-    }
+            TeleportHelperFilter... filters);
 
 }
