@@ -8,8 +8,8 @@ import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanner;
 import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanners;
 import io.github.nucleuspowered.nucleus.internal.annotations.Registry;
 import io.github.nucleuspowered.nucleus.internal.registry.NucleusRegistryModule;
-import io.github.nucleuspowered.nucleus.internal.teleport.scanners.NoTeleportScanner;
-import io.github.nucleuspowered.nucleus.internal.teleport.scanners.VerticalTeleportScanner;
+import io.github.nucleuspowered.nucleus.modules.core.teleport.scanners.NoTeleportScanner;
+import io.github.nucleuspowered.nucleus.modules.core.teleport.scanners.VerticalTeleportScanner;
 import org.spongepowered.plugin.meta.util.NonnullByDefault;
 
 @NonnullByDefault

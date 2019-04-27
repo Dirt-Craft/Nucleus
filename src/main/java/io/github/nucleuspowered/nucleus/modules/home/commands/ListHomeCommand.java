@@ -17,7 +17,7 @@ import io.github.nucleuspowered.nucleus.internal.command.NucleusParameters;
 import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
-import io.github.nucleuspowered.nucleus.modules.home.services.HomeHandler;
+import io.github.nucleuspowered.nucleus.modules.home.services.HomeService;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
@@ -51,7 +51,7 @@ public class ListHomeCommand extends AbstractCommand<CommandSource> {
     private final String exempt = Nucleus.getNucleus().getPermissionRegistry().getPermissionsForNucleusCommand(HomeOtherCommand.class)
         .getPermissionWithSuffix(HomeOtherCommand.OTHER_EXEMPT_PERM_SUFFIX);
 
-    private final HomeHandler homeHandler = getServiceUnchecked(HomeHandler.class);
+    private final HomeService homeService = getServiceUnchecked(HomeService.class);
 
     @Override
     public Map<String, PermissionInformation> permissionSuffixesToRegister() {
@@ -78,7 +78,7 @@ public class ListHomeCommand extends AbstractCommand<CommandSource> {
             throw new ReturnMessageException(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.listhome.exempt"));
         }
 
-        List<Home> msw = this.homeHandler.getHomes(user);
+        List<Home> msw = this.homeService.getHomes(user);
         if (msw.isEmpty()) {
             src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.home.nohomes"));
             return CommandResult.empty();

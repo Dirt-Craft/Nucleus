@@ -2,21 +2,25 @@
  * This file is part of Nucleus, licensed under the MIT License (MIT). See the LICENSE.txt file
  * at the root of this project for more details.
  */
-package io.github.nucleuspowered.nucleus.internal.teleport.filters;
+package io.github.nucleuspowered.nucleus.modules.core.teleport.filters;
 
 import com.flowpowered.math.vector.Vector3i;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
-import org.spongepowered.api.world.teleport.TeleportHelperFilter;
 import org.spongepowered.plugin.meta.util.NonnullByDefault;
 
 @NonnullByDefault
-public class NoCheckFilter implements TeleportHelperFilter {
+public class WallCheckFilter extends FilterBase {
 
     @Override
     public Tristate isValidLocation(World world, Vector3i position) {
-        return Tristate.TRUE;
+        // Check that the block is not solid.
+        if (isPassable(world, position, false) && isPassable(world, position.add(0, 1, 0), false)) {
+            return Tristate.TRUE;
+        }
+
+        return Tristate.FALSE;
     }
 
     @Override
@@ -31,11 +35,12 @@ public class NoCheckFilter implements TeleportHelperFilter {
 
     @Override
     public String getId() {
-        return "nucleus:no_check";
+        return "nucleus:wall_check";
     }
 
     @Override
     public String getName() {
-        return "Nucleus No Check filter";
+        return "Nucleus Wall Check filter";
     }
+
 }

@@ -2,7 +2,7 @@
  * This file is part of Nucleus, licensed under the MIT License (MIT). See the LICENSE.txt file
  * at the root of this project for more details.
  */
-package io.github.nucleuspowered.nucleus.internal.teleport;
+package io.github.nucleuspowered.nucleus.modules.core.teleport;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.ImmutableList;
@@ -65,38 +65,6 @@ public class NucleusTeleportHandler {
 
         // If we're flying, the sky is the limit! If not, feet firmly on the ground!
         return StandardTeleportMode.FLYING_THEN_SAFE;
-    }
-
-    /**
-     * Attempts to teleport a subject using the appropriate {@link StandardTeleportMode} strategy.
-     *
-     * @param player The {@link Player}
-     * @param locationToTeleportTo The {@link Location} in the {@link World} to teleport to.
-     * @param safe If {@code true}, try to teleport the subject safely based on their current game mode
-     * @return The {@link TeleportResult}
-     */
-    public TeleportResult teleportPlayer(Player player, Location<World> locationToTeleportTo, boolean safe) {
-        return teleportPlayer(player, locationToTeleportTo, player.getRotation(), safe);
-    }
-
-    /**
-     * Attempts to teleport a subject using a {@link StandardTeleportMode} strategy.
-     *
-     * @param player The {@link Player}
-     * @param worldLocation The {@link Location} in the {@link World} to teleport to.
-     * @param rotation The {@link Vector3d} containing the rotation to port to.
-     * @param safe If {@code true}, try to teleport the subject safely based on their current game mode
-     * @return The {@link TeleportResult}
-     */
-    public TeleportResult teleportPlayer(Player player, Location<World> worldLocation, Vector3d rotation, boolean safe) {
-        StandardTeleportMode mode = safe ? getTeleportModeForPlayer(player) : StandardTeleportMode.NO_CHECK;
-        return CauseStackHelper.createFrameWithCausesWithReturn(c -> teleportPlayer(player, worldLocation, rotation, mode, c, true), player);
-    }
-
-    public TeleportResult teleportPlayer(Player player, Transform<World> worldTransform) {
-        return CauseStackHelper.createFrameWithCausesWithReturn(c ->
-                teleportPlayer(player, worldTransform.getLocation(), worldTransform.getRotation(), getTeleportModeForPlayer(player), c, true),
-                player);
     }
 
     public TeleportResult teleportPlayer(Player player, Transform<World> worldTransform, boolean safe, boolean borderCheck) {

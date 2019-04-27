@@ -9,10 +9,10 @@ import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.api.catalogkeys.NucleusTeleportHelperFilters;
 import io.github.nucleuspowered.nucleus.internal.CatalogTypeFinalStaticProcessor;
 import io.github.nucleuspowered.nucleus.internal.qsml.module.ConfigurableModule;
-import io.github.nucleuspowered.nucleus.internal.teleport.filters.NoCheckFilter;
-import io.github.nucleuspowered.nucleus.internal.teleport.filters.WallCheckFilter;
 import io.github.nucleuspowered.nucleus.internal.userprefs.UserPreferenceService;
 import io.github.nucleuspowered.nucleus.modules.core.config.CoreConfigAdapter;
+import io.github.nucleuspowered.nucleus.modules.core.teleport.filters.NoCheckFilter;
+import io.github.nucleuspowered.nucleus.modules.core.teleport.filters.WallCheckFilter;
 import org.spongepowered.api.world.teleport.TeleportHelperFilter;
 import uk.co.drnaylor.quickstart.annotations.ModuleData;
 

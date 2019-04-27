@@ -7,6 +7,7 @@ package io.github.nucleuspowered.nucleus.modules.home.commands;
 import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.api.nucleusdata.Home;
 import io.github.nucleuspowered.nucleus.api.service.NucleusHomeService;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportResult;
 import io.github.nucleuspowered.nucleus.argumentparsers.HomeArgument;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
@@ -17,10 +18,7 @@ import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.home.config.HomeConfig;
 import io.github.nucleuspowered.nucleus.modules.home.config.HomeConfigAdapter;
-import io.github.nucleuspowered.nucleus.modules.home.events.UseHomeEvent;
-import io.github.nucleuspowered.nucleus.modules.home.services.HomeHandler;
-import io.github.nucleuspowered.nucleus.util.CauseStackHelper;
-import org.spongepowered.api.Sponge;
+import io.github.nucleuspowered.nucleus.modules.home.services.HomeService;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
@@ -29,8 +27,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 import java.util.Optional;
 
@@ -42,7 +38,7 @@ public class HomeCommand extends AbstractCommand<Player> implements Reloadable {
 
     private final String home = "home";
 
-    private final HomeHandler homeHandler = Nucleus.getNucleus().getInternalServiceManager().getServiceUnchecked(HomeHandler.class);
+    private final HomeService homeService = Nucleus.getNucleus().getInternalServiceManager().getServiceUnchecked(HomeService.class);
 
     private boolean isSafeTeleport = true;
     private boolean isPreventOverhang = true;
@@ -56,8 +52,8 @@ public class HomeCommand extends AbstractCommand<Player> implements Reloadable {
 
     @Override
     public CommandResult executeCommand(Player src, CommandContext args, Cause cause) throws Exception {
-        int max = this.homeHandler.getMaximumHomes(src) ;
-        int current = this.homeHandler.getHomeCount(src) ;
+        int max = this.homeService.getMaximumHomes(src) ;
+        int current = this.homeService.getHomeCount(src) ;
         if (this.isPreventOverhang && max < current) {
             // If the player has too many homes, tell them
             throw ReturnMessageException.fromKey("command.home.overhang", String.valueOf(max), String.valueOf(current));
@@ -69,24 +65,22 @@ public class HomeCommand extends AbstractCommand<Player> implements Reloadable {
         if (owl.isPresent()) {
             wl = owl.get();
         } else {
-            wl = this.homeHandler.getHome(src, NucleusHomeService.DEFAULT_HOME_NAME)
+            wl = this.homeService.getHome(src, NucleusHomeService.DEFAULT_HOME_NAME)
                 .orElseThrow(() -> new ReturnMessageException(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("args.home.nohome", "home")));
         }
 
-        Sponge.getServer().loadWorld(wl.getWorldProperties()
-                .orElseThrow(() -> ReturnMessageException.fromKey("command.home.invalid", wl.getName())));
-
-        Location<World> targetLocation = wl.getLocation().orElseThrow(() -> ReturnMessageException.fromKey("command.home.invalid", wl.getName()));
-
-        UseHomeEvent event = CauseStackHelper.createFrameWithCausesWithReturn(c -> new UseHomeEvent(c, src, wl), src);
-        if (Sponge.getEventManager().post(event)) {
-            throw new ReturnMessageException(event.getCancelMessage().orElseGet(() ->
-                    Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("nucleus.eventcancelled")
-            ));
-        }
+        TeleportResult result =
+                Nucleus.getNucleus()
+                        .getInternalServiceManager()
+                        .getServiceUnchecked(HomeService.class)
+                        .warpToHome(
+                                src,
+                                wl,
+                                this.isSafeTeleport
+                        );
 
         // Warp to it safely.
-        if (Nucleus.getNucleus().getTeleportHandler().teleportPlayer(src, targetLocation, wl.getRotation(),this.isSafeTeleport).isSuccess()) {
+        if (result.isSuccessful()) {
             if (!wl.getName().equalsIgnoreCase(NucleusHomeService.DEFAULT_HOME_NAME)) {
                 src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.home.success", wl.getName()));
             } else {

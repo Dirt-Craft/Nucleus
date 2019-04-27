@@ -6,6 +6,7 @@ package io.github.nucleuspowered.nucleus.modules.core.services;
 
 import com.flowpowered.math.vector.Vector3d;
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.catalogkeys.NucleusTeleportHelperFilters;
 import io.github.nucleuspowered.nucleus.api.service.NucleusSafeTeleportService;
 import io.github.nucleuspowered.nucleus.api.teleport.TeleportResult;
 import io.github.nucleuspowered.nucleus.api.teleport.TeleportResults;
@@ -13,11 +14,11 @@ import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanner;
 import io.github.nucleuspowered.nucleus.internal.annotations.APIService;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.interfaces.ServiceBase;
-import io.github.nucleuspowered.nucleus.internal.teleport.NucleusTeleportHandler;
 import io.github.nucleuspowered.nucleus.modules.core.config.CoreConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.core.config.SafeTeleportConfig;
 import io.github.nucleuspowered.nucleus.modules.teleport.events.AboutToTeleportEvent;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
@@ -27,6 +28,7 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.TeleportHelper;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.teleport.TeleportHelperFilter;
+import org.spongepowered.api.world.teleport.TeleportHelperFilters;
 
 import java.util.Optional;
 
@@ -34,7 +36,7 @@ import javax.inject.Singleton;
 
 @Singleton
 @APIService(NucleusSafeTeleportService.class)
-public class NucleusSafeLocationHelper implements NucleusSafeTeleportService, Reloadable, ServiceBase {
+public class NucleusSafeLocationService implements NucleusSafeTeleportService, Reloadable, ServiceBase {
 
     private SafeTeleportConfig config = new SafeTeleportConfig();
 
@@ -98,7 +100,6 @@ public class NucleusSafeLocationHelper implements NucleusSafeTeleportService, Re
             }
 
             // Do it, tell the routine if it worked.
-            NucleusTeleportHandler.TeleportResult tr;
             if (centreBlock) {
                 targetLocation = new Transform<>(
                         targetLocation.getExtent(),
@@ -117,7 +118,8 @@ public class NucleusSafeLocationHelper implements NucleusSafeTeleportService, Re
         return TeleportResults.FAIL_NO_LOCATION;
     }
 
-    @Override public Optional<Location<World>> getSafeLocation(
+    @Override
+    public Optional<Location<World>> getSafeLocation(
             Location<World> location,
             TeleportScanner scanner,
             TeleportHelperFilter filter,
@@ -133,7 +135,8 @@ public class NucleusSafeLocationHelper implements NucleusSafeTeleportService, Re
         );
     }
 
-    @Override public Optional<Transform<World>> getSafeTransform(
+    @Override
+    public Optional<Transform<World>> getSafeTransform(
             Location<World> location,
             Vector3d rotation,
             TeleportScanner scanner,
@@ -141,6 +144,18 @@ public class NucleusSafeLocationHelper implements NucleusSafeTeleportService, Re
             TeleportHelperFilter... filters) {
         return getSafeLocation(location, scanner, filter, filters)
                 .map(x -> new Transform<>(location.getExtent(), location.getPosition(), rotation));
+    }
+
+    public TeleportHelperFilter getAppropriateFilter(Player src, boolean safeTeleport) {
+        if (safeTeleport) {
+            if (src.get(Keys.IS_FLYING).orElse(false)) {
+                return TeleportHelperFilters.FLYING;
+            } else {
+                return TeleportHelperFilters.DEFAULT;
+            }
+        } else {
+            return NucleusTeleportHelperFilters.NO_CHECK;
+        }
     }
 
     @Override
