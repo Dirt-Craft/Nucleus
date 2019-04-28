@@ -18,7 +18,6 @@ import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformati
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.core.CoreKeys;
 import io.github.nucleuspowered.nucleus.modules.teleport.config.TeleportConfigAdapter;
-import io.github.nucleuspowered.nucleus.modules.teleport.services.TeleportHandler;
 import io.github.nucleuspowered.nucleus.storage.dataobjects.modular.IUserDataObject;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.args.CommandContext;
@@ -45,7 +44,7 @@ import java.util.Map;
 @NonnullByDefault
 public class TeleportHereCommand extends AbstractCommand<Player> implements Reloadable {
 
-    private final TeleportHandler handler = getServiceUnchecked(TeleportHandler.class);
+   // private final TeleportHandler handler = getServiceUnchecked(TeleportHandler.class);
 
     private boolean isDefaultQuiet = false;
 

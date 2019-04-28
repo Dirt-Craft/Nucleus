@@ -58,7 +58,7 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
 
     private boolean isDefaultQuiet = false;
 
-    private final TeleportHandler handler = getServiceUnchecked(TeleportHandler.class);
+   //  private final TeleportHandler handler = getServiceUnchecked(TeleportHandler.class);
 
     @Override public void onReload() {
         this.isDefaultQuiet = getServiceUnchecked(TeleportConfigAdapter.class).getNodeOrDefault().isDefaultQuiet();
