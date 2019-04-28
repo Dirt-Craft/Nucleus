@@ -13,7 +13,6 @@ import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
-import io.github.nucleuspowered.nucleus.modules.core.teleport.NucleusTeleportHandler;
 import io.github.nucleuspowered.nucleus.modules.jump.JumpModule;
 import io.github.nucleuspowered.nucleus.modules.jump.config.JumpConfig;
 import io.github.nucleuspowered.nucleus.modules.jump.config.JumpConfigAdapter;
@@ -53,7 +52,7 @@ public class UnstuckCommand extends AbstractCommand<Player> implements Reloadabl
                 false,
                 TeleportScanners.NO_SCAN,
                 TeleportHelperFilters.DEFAULT).isSuccessful())
-        if (NucleusTeleportHandler.setLocation(src, location)) {
+        if (NucleusSafeLocationService.setLocation(src, location)) {
             src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithTextFormat("command.unstuck.success"));
             return CommandResult.success();
         }

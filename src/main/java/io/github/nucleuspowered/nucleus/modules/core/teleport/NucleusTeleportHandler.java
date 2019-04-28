@@ -11,7 +11,6 @@ import io.github.nucleuspowered.nucleus.Util;
 import io.github.nucleuspowered.nucleus.modules.core.config.CoreConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.core.config.SafeTeleportConfig;
 import io.github.nucleuspowered.nucleus.modules.teleport.events.AboutToTeleportEvent;
-import io.github.nucleuspowered.nucleus.util.CauseStackHelper;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
@@ -65,49 +64,6 @@ public class NucleusTeleportHandler {
 
         // If we're flying, the sky is the limit! If not, feet firmly on the ground!
         return StandardTeleportMode.FLYING_THEN_SAFE;
-    }
-
-    public TeleportResult teleportPlayer(Player player, Transform<World> worldTransform, boolean safe, boolean borderCheck) {
-        StandardTeleportMode mode = safe ? getTeleportModeForPlayer(player) : StandardTeleportMode.NO_CHECK;
-        return CauseStackHelper.createFrameWithCausesWithReturn(c ->
-                teleportPlayer(player, worldTransform.getLocation(), worldTransform.getRotation(), mode, c, borderCheck), player);
-    }
-
-    public TeleportResult teleportPlayer(Player player, Transform<World> locationToTeleportTo, StandardTeleportMode teleportMode) {
-        return CauseStackHelper.createFrameWithCausesWithReturn(c ->
-                teleportPlayer(player, locationToTeleportTo.getLocation(), locationToTeleportTo.getRotation(), teleportMode, c, true), player);
-    }
-
-    public TeleportResult teleportPlayer(Player player, Transform<World> locationToTeleportTo, StandardTeleportMode teleportMode,
-            boolean borderCheck) {
-        return CauseStackHelper.createFrameWithCausesWithReturn(c ->
-                teleportPlayer(player, locationToTeleportTo.getLocation(), locationToTeleportTo.getRotation(), teleportMode, c, borderCheck), player);
-    }
-
-    public TeleportResult teleportPlayer(Player player, Transform<World> locationToTeleportTo, TeleportMode teleportMode, Cause cause) {
-        return teleportPlayer(player, locationToTeleportTo.getLocation(), locationToTeleportTo.getRotation(), teleportMode, cause, true);
-    }
-
-    public TeleportResult teleportPlayer(Player player, Transform<World> locationToTeleportTo, TeleportMode teleportMode, Cause cause,
-            boolean borderCheck) {
-        return teleportPlayer(player, locationToTeleportTo.getLocation(), locationToTeleportTo.getRotation(), teleportMode, cause, borderCheck);
-    }
-
-    public TeleportResult teleportPlayer(Player pl, Location<World> loc, TeleportMode mode) {
-        return CauseStackHelper.createFrameWithCausesWithReturn(c -> teleportPlayer(pl, loc, mode, c), pl);
-    }
-
-    public TeleportResult teleportPlayer(Player pl, Location<World> loc, TeleportMode mode, Cause of) {
-        return teleportPlayer(pl, loc, pl.getRotation(), mode, of, true);
-    }
-
-    public TeleportResult teleportPlayer(Player pl, Location<World> loc, TeleportMode mode, Cause of, boolean addOffset) {
-        return teleportPlayer(pl, loc, pl.getRotation(), mode, of, addOffset, true);
-    }
-
-    public TeleportResult teleportPlayer(Player player, Location<World> locationToTeleportTo, Vector3d rotation, TeleportMode teleportMode,
-            Cause cause, boolean borderCheck) {
-        return teleportPlayer(player, locationToTeleportTo, rotation, teleportMode, cause, false, borderCheck);
     }
 
     public TeleportResult teleportPlayer(Player player, Location<World> locationToTeleportTo, Vector3d rotation, TeleportMode teleportMode,
@@ -176,15 +132,6 @@ public class NucleusTeleportHandler {
         }
 
         return block.getProperty(PassableProperty.class).map(x -> x.getValue()).orElse(false);
-    }
-
-    public static boolean setLocation(Player player, Location<World> location) {
-        if (player.setLocation(location)) {
-            player.setSpectatorTarget(null);
-            return true;
-        }
-
-        return false;
     }
 
     public interface TeleportMode extends BiFunction<Player, Location<World>, Optional<Location<World>>> { }

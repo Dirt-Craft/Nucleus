@@ -5,6 +5,7 @@
 package io.github.nucleuspowered.nucleus.modules.teleport.commands;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanners;
 import io.github.nucleuspowered.nucleus.argumentparsers.AlternativeUsageArgument;
 import io.github.nucleuspowered.nucleus.argumentparsers.IfConditionElseArgument;
 import io.github.nucleuspowered.nucleus.argumentparsers.NicknameArgument;
@@ -22,10 +23,10 @@ import io.github.nucleuspowered.nucleus.internal.messages.MessageProvider;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.core.CoreKeys;
-import io.github.nucleuspowered.nucleus.modules.core.teleport.NucleusTeleportHandler;
+import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
 import io.github.nucleuspowered.nucleus.modules.teleport.config.TeleportConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.teleport.services.TeleportHandler;
-import io.github.nucleuspowered.nucleus.util.CauseStackHelper;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
@@ -33,6 +34,7 @@ import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
@@ -164,14 +166,24 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
                 .orElseThrow(r);
 
         MessageProvider provider = Nucleus.getNucleus().getMessageProvider();
-        if (CauseStackHelper.createFrameWithCausesWithReturn(c ->
-                Nucleus.getNucleus().getTeleportHandler().teleportPlayer(from, l, NucleusTeleportHandler.StandardTeleportMode.FLYING_THEN_SAFE, c).isSuccess(), src)) {
-            if (!(src instanceof Player && ((Player) src).getUniqueId().equals(from.getUniqueId()))) {
-                src.sendMessage(provider.getTextMessageWithFormat("command.teleport.offline.other", from.getName(), to.getName()));
-            }
+        try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
+            frame.pushCause(src);
+            boolean result = getServiceUnchecked(NucleusSafeLocationService.class)
+                    .teleportPlayerSmart(
+                            from,
+                            l,
+                            false,
+                            true,
+                            TeleportScanners.NO_SCAN
+                    ).isSuccessful();
+            if (result) {
+                if (!(src instanceof Player && ((Player) src).getUniqueId().equals(from.getUniqueId()))) {
+                    src.sendMessage(provider.getTextMessageWithFormat("command.teleport.offline.other", from.getName(), to.getName()));
+                }
 
-            from.sendMessage(provider.getTextMessageWithFormat("command.teleport.offline.self", to.getName()));
-            return CommandResult.success();
+                from.sendMessage(provider.getTextMessageWithFormat("command.teleport.offline.self", to.getName()));
+                return CommandResult.success();
+            }
         }
 
         throw ReturnMessageException.fromKey("command.teleport.error");

@@ -20,7 +20,7 @@ import io.github.nucleuspowered.nucleus.internal.messages.MessageProvider;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.core.CoreKeys;
-import io.github.nucleuspowered.nucleus.modules.core.teleport.NucleusTeleportHandler;
+import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
 import io.github.nucleuspowered.nucleus.modules.misc.commands.SpeedCommand;
 import io.github.nucleuspowered.nucleus.modules.playerinfo.services.SeenHandler;
 import io.github.nucleuspowered.nucleus.modules.teleport.commands.TeleportPositionCommand;
@@ -288,7 +288,7 @@ public class SeenCommand extends AbstractCommand<CommandSource> {
             Sponge.getServer().getWorld(worldProperties.getUniqueId()).ifPresent(
                     x -> building.onClick(TextActions.executeCallback(cs -> {
                         if (cs instanceof Player) {
-                            NucleusTeleportHandler.setLocation((Player) cs, new Location<>(x, position));
+                            NucleusSafeLocationService.setLocation((Player) cs, new Location<>(x, position));
                         }
                     })
             ));

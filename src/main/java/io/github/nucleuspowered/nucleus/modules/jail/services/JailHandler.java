@@ -15,6 +15,7 @@ import io.github.nucleuspowered.nucleus.api.exceptions.NoSuchLocationException;
 import io.github.nucleuspowered.nucleus.api.nucleusdata.Inmate;
 import io.github.nucleuspowered.nucleus.api.nucleusdata.NamedLocation;
 import io.github.nucleuspowered.nucleus.api.service.NucleusJailService;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanners;
 import io.github.nucleuspowered.nucleus.configurate.datatypes.LocationNode;
 import io.github.nucleuspowered.nucleus.internal.LocationData;
 import io.github.nucleuspowered.nucleus.internal.annotations.APIService;
@@ -23,7 +24,7 @@ import io.github.nucleuspowered.nucleus.internal.interfaces.ServiceBase;
 import io.github.nucleuspowered.nucleus.internal.messages.MessageProvider;
 import io.github.nucleuspowered.nucleus.internal.traits.IDataManagerTrait;
 import io.github.nucleuspowered.nucleus.modules.core.CoreKeys;
-import io.github.nucleuspowered.nucleus.modules.core.teleport.NucleusTeleportHandler;
+import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
 import io.github.nucleuspowered.nucleus.modules.fly.FlyKeys;
 import io.github.nucleuspowered.nucleus.modules.jail.JailKeys;
 import io.github.nucleuspowered.nucleus.modules.jail.data.JailData;
@@ -195,7 +196,7 @@ public class JailHandler implements NucleusJailService, ContextCalculator<Subjec
 
         // Get the jail.
         Optional<NamedLocation> owl = getJail(data.getJailName());
-        NamedLocation wl = owl.filter(x -> x.getLocation().isPresent()).orElseGet(() -> {
+        NamedLocation wl = owl.filter(x -> x.getTransform().isPresent()).orElseGet(() -> {
             if (!getJails().isEmpty()) {
                 return null;
             }
@@ -211,8 +212,14 @@ public class JailHandler implements NucleusJailService, ContextCalculator<Subjec
         if (user.isOnline()) {
             Sponge.getScheduler().createSyncExecutor(Nucleus.getNucleus()).execute(() -> {
                 Player player = user.getPlayer().get();
-                Nucleus.getNucleus().getTeleportHandler().teleportPlayer(player, owl.get().getLocation().get(), owl.get().getRotation(),
-                    NucleusTeleportHandler.StandardTeleportMode.NO_CHECK, Sponge.getCauseStackManager().getCurrentCause(), true);
+                Nucleus.getNucleus().getInternalServiceManager().getServiceUnchecked(NucleusSafeLocationService.class)
+                        .teleportPlayerSmart(
+                                player,
+                                owl.get().getTransform().get(), // The transform exists.
+                                true,
+                                false,
+                                TeleportScanners.NO_SCAN
+                        );
                 player.offer(Keys.IS_FLYING, false);
                 player.offer(Keys.CAN_FLY, false);
                 udo.set(FlyKeys.FLY_TOGGLE, false);
@@ -226,12 +233,11 @@ public class JailHandler implements NucleusJailService, ContextCalculator<Subjec
         saveUser(user.getUniqueId(), udo);
 
         Sponge.getEventManager().post(new JailEvent.Jailed(
-            user,
-            CauseStackHelper.createCause(Util.getObjectFromUUID(data.getJailerInternal())),
-            data.getJailName(),
-            TextSerializers.FORMATTING_CODE.deserialize(data.getReason()),
-            data.getRemainingTime().orElse(null)));
-
+                user,
+                CauseStackHelper.createCause(Util.getObjectFromUUID(data.getJailerInternal())),
+                data.getJailName(),
+                TextSerializers.FORMATTING_CODE.deserialize(data.getReason()),
+                data.getRemainingTime().orElse(null)));
 
         return true;
     }
@@ -260,7 +266,7 @@ public class JailHandler implements NucleusJailService, ContextCalculator<Subjec
         if (user.isOnline()) {
             Player player = user.getPlayer().get();
             Sponge.getScheduler().createSyncExecutor(Nucleus.getNucleus()).execute(() -> {
-                NucleusTeleportHandler.setLocation(player, ow.orElseGet(() -> player.getWorld().getSpawnLocation()));
+                NucleusSafeLocationService.setLocation(player, ow.orElseGet(() -> player.getWorld().getSpawnLocation()));
                 player.sendMessage(NucleusPlugin.getNucleus().getMessageProvider().getTextMessageWithFormat("jail.elapsed"));
 
                 // Remove after the teleport for the back data.

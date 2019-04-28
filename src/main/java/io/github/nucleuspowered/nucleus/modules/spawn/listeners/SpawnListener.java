@@ -7,6 +7,8 @@ package io.github.nucleuspowered.nucleus.modules.spawn.listeners;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Maps;
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.catalogkeys.NucleusTeleportHelperFilters;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanners;
 import io.github.nucleuspowered.nucleus.configurate.datatypes.LocationNode;
 import io.github.nucleuspowered.nucleus.internal.PermissionRegistry;
 import io.github.nucleuspowered.nucleus.internal.interfaces.ListenerBase;
@@ -16,7 +18,7 @@ import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.internal.traits.IDataManagerTrait;
 import io.github.nucleuspowered.nucleus.internal.traits.MessageProviderTrait;
 import io.github.nucleuspowered.nucleus.modules.core.CoreKeys;
-import io.github.nucleuspowered.nucleus.modules.core.teleport.NucleusTeleportHandler;
+import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
 import io.github.nucleuspowered.nucleus.modules.spawn.SpawnKeys;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.GlobalSpawnConfig;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.SpawnConfig;
@@ -35,6 +37,7 @@ import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
+import org.spongepowered.api.world.teleport.TeleportHelperFilters;
 
 import java.util.Map;
 import java.util.Optional;
@@ -111,8 +114,13 @@ public class SpawnListener implements Reloadable, ListenerBase, MessageProviderT
             }
 
             Location<World> lw = world.getSpawnLocation().add(0.5, 0, 0.5);
-            Optional<Location<World>> safe = Nucleus.getNucleus().getTeleportHandler().getSafeLocation(null, lw,
-                    this.spawnConfig.isSafeTeleport() ? NucleusTeleportHandler.StandardTeleportMode.SAFE_TELEPORT_ASCENDING : NucleusTeleportHandler.StandardTeleportMode.NO_CHECK);
+            Optional<Location<World>> safe = getServiceUnchecked(NucleusSafeLocationService.class)
+                    .getSafeLocation(
+                            lw,
+                            TeleportScanners.ASCENDING_SCAN,
+                            this.spawnConfig.isSafeTeleport() ? TeleportHelperFilters.DEFAULT : NucleusTeleportHelperFilters.NO_CHECK
+                    );
+
             if (safe.isPresent()) {
                 try {
                     Optional<Vector3d> ov = Nucleus.getNucleus()

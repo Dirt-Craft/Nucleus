@@ -11,6 +11,9 @@ import io.github.nucleuspowered.nucleus.NameUtil;
 import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.NucleusPlugin;
 import io.github.nucleuspowered.nucleus.Util;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportResult;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportResults;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanners;
 import io.github.nucleuspowered.nucleus.internal.PermissionRegistry;
 import io.github.nucleuspowered.nucleus.internal.interfaces.CancellableTask;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
@@ -19,18 +22,18 @@ import io.github.nucleuspowered.nucleus.internal.traits.InternalServiceManagerTr
 import io.github.nucleuspowered.nucleus.internal.traits.MessageProviderTrait;
 import io.github.nucleuspowered.nucleus.internal.traits.PermissionTrait;
 import io.github.nucleuspowered.nucleus.internal.userprefs.UserPreferenceService;
-import io.github.nucleuspowered.nucleus.modules.core.teleport.NucleusTeleportHandler;
+import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
 import io.github.nucleuspowered.nucleus.modules.teleport.TeleportUserPrefKeys;
 import io.github.nucleuspowered.nucleus.modules.teleport.commands.TeleportAcceptCommand;
 import io.github.nucleuspowered.nucleus.modules.teleport.commands.TeleportDenyCommand;
 import io.github.nucleuspowered.nucleus.modules.teleport.config.TeleportConfigAdapter;
 import io.github.nucleuspowered.nucleus.storage.dataobjects.modular.IUserDataObject;
-import io.github.nucleuspowered.nucleus.util.CauseStackHelper;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.text.Text;
@@ -250,43 +253,46 @@ public class TeleportHandler implements MessageProviderTrait, InternalServiceMan
         private void run() {
             if (this.playerToTeleportTo.isOnline()) {
                 // If safe, get the teleport mode
-                NucleusTeleportHandler tpHandler = Nucleus.getNucleus().getTeleportHandler();
+                NucleusSafeLocationService tpHandler =
+                        Nucleus.getNucleus().getInternalServiceManager().getServiceUnchecked(NucleusSafeLocationService.class);
 
-                NucleusTeleportHandler.StandardTeleportMode mode;
-                if (this.safe) {
-                    mode = tpHandler.getTeleportModeForPlayer(this.playerToTeleport);
-                } else {
-                    mode = NucleusTeleportHandler.StandardTeleportMode.NO_CHECK;
-                }
+                try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
+                    frame.pushCause(this.source);
+                    TeleportResult result = tpHandler.teleportPlayerSmart(
+                            this.playerToTeleport,
+                            this.playerToTeleportTo.getTransform(),
+                            false,
+                            this.safe,
+                            TeleportScanners.NO_SCAN
+                    );
 
-                NucleusTeleportHandler.TeleportResult result =
-                        tpHandler.teleportPlayer(this.playerToTeleport, this.playerToTeleportTo.getTransform(), mode,
-                                CauseStackHelper.createCause(this.source));
-                if (!result.isSuccess()) {
-                    if (!this.silentSource) {
-                        this.source.sendMessage(NucleusPlugin.getNucleus().getMessageProvider().getTextMessageWithFormat(result ==
-                                NucleusTeleportHandler.TeleportResult.FAILED_NO_LOCATION ? "teleport.nosafe" : "teleport.cancelled"));
+                    if (!result.isSuccessful()) {
+                        if (!this.silentSource) {
+                            this.source.sendMessage(NucleusPlugin.getNucleus().getMessageProvider().getTextMessageWithFormat(
+                                    result == TeleportResults.FAIL_NO_LOCATION ? "teleport.nosafe" : "teleport.cancelled"));
+                        }
+
+                        onCancel();
+                        return;
                     }
 
-                    onCancel();
-                    return;
-                }
+                    if (!this.source.equals(this.playerToTeleport) && !this.silentSource) {
+                        this.source.sendMessage(NucleusPlugin.getNucleus().getMessageProvider().getTextMessageWithFormat("teleport.success.source",
+                                this.playerToTeleport.getName(),
+                                this.playerToTeleportTo.getName()));
+                    }
 
-                if (!this.source.equals(this.playerToTeleport) && !this.silentSource) {
-                    this.source.sendMessage(NucleusPlugin.getNucleus().getMessageProvider().getTextMessageWithFormat("teleport.success.source",
-                            this.playerToTeleport.getName(),
+                    this.playerToTeleport.sendMessage(NucleusPlugin.getNucleus().getMessageProvider().getTextMessageWithFormat("teleport.to.success",
                             this.playerToTeleportTo.getName()));
-                }
+                    if (!this.silentTarget) {
+                        this.playerToTeleportTo
+                                .sendMessage(NucleusPlugin.getNucleus().getMessageProvider().getTextMessageWithFormat("teleport.from.success",
+                                        this.playerToTeleport.getName()));
+                    }
 
-                this.playerToTeleport.sendMessage(NucleusPlugin.getNucleus().getMessageProvider().getTextMessageWithFormat("teleport.to.success",
-                        this.playerToTeleportTo.getName()));
-                if (!this.silentTarget) {
-                    this.playerToTeleportTo.sendMessage(NucleusPlugin.getNucleus().getMessageProvider().getTextMessageWithFormat("teleport.from.success",
-                            this.playerToTeleport.getName()));
-                }
-
-                if (this.successCallback != null && this.source instanceof Player) {
-                    this.successCallback.accept((Player) this.source);
+                    if (this.successCallback != null && this.source instanceof Player) {
+                        this.successCallback.accept((Player) this.source);
+                    }
                 }
             } else {
                 if (!this.silentSource) {
