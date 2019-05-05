@@ -16,7 +16,7 @@ import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEq
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.GlobalSpawnConfig;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.SpawnConfig;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.SpawnConfigAdapter;
@@ -100,7 +100,7 @@ public class SpawnCommand extends AbstractCommand<Player> implements Reloadable 
         }
 
         // If we don't have a rotation, then use the current rotation
-        TeleportResult result = getServiceUnchecked(NucleusSafeLocationService.class)
+        TeleportResult result = getServiceUnchecked(SafeTeleportService.class)
                 .teleportPlayerSmart(
                         src,
                         SpawnHelper.getSpawn(ow.get().getProperties(), src),

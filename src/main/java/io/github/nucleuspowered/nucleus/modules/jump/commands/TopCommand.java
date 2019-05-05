@@ -15,7 +15,7 @@ import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
 import io.github.nucleuspowered.nucleus.internal.command.NucleusParameters;
 import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEquivalent;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
@@ -68,7 +68,7 @@ public class TopCommand extends AbstractCommand<CommandSource> {
         }
 
         boolean isSafe = !args.hasAny("f");
-        TeleportResult result = getServiceUnchecked(NucleusSafeLocationService.class)
+        TeleportResult result = getServiceUnchecked(SafeTeleportService.class)
                 .teleportPlayer(
                         playerToTeleport,
                         end.getLocation(),

@@ -11,7 +11,7 @@ import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
 import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEquivalent;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.teleport.services.PlayerTeleporterService;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandResult;
@@ -31,7 +31,7 @@ import org.spongepowered.api.util.annotation.NonnullByDefault;
 public class TeleportAllHereCommand extends AbstractCommand<Player> {
 
     private final PlayerTeleporterService handler = getServiceUnchecked(PlayerTeleporterService.class);
-    private final NucleusSafeLocationService service = getServiceUnchecked(NucleusSafeLocationService.class);
+    private final SafeTeleportService service = getServiceUnchecked(SafeTeleportService.class);
 
     @Override
     public CommandElement[] getArguments() {

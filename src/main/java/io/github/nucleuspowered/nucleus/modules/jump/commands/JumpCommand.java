@@ -13,7 +13,7 @@ import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
 import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEquivalent;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.jump.config.JumpConfigAdapter;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandResult;
@@ -77,7 +77,7 @@ public class JumpCommand extends AbstractCommand<Player> implements Reloadable {
             throw ReturnMessageException.fromKey("command.jump.outsideborder");
         }
 
-        boolean result = getServiceUnchecked(NucleusSafeLocationService.class)
+        boolean result = getServiceUnchecked(SafeTeleportService.class)
                 .teleportPlayerSmart(
                         player,
                         finalLocation,

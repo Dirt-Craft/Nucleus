@@ -13,7 +13,7 @@ import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCom
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.spawn.SpawnKeys;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.SpawnConfigAdapter;
 import org.spongepowered.api.command.CommandResult;
@@ -45,7 +45,7 @@ public class FirstSpawnCommand extends AbstractCommand<Player> implements Reload
             return CommandResult.empty();
         }
 
-        TeleportResult result = getServiceUnchecked(NucleusSafeLocationService.class)
+        TeleportResult result = getServiceUnchecked(SafeTeleportService.class)
                 .teleportPlayerSmart(
                         src,
                         olwr.get(),

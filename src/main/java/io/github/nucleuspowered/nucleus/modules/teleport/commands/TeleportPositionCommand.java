@@ -19,7 +19,7 @@ import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEquivalent;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -110,7 +110,7 @@ public class TeleportPositionCommand extends AbstractCommand<CommandSource> {
 
         // Create the location
         Location<World> loc = new Location<>(world, xx, yy, zz);
-        NucleusSafeLocationService teleportHandler = getServiceUnchecked(NucleusSafeLocationService.class);
+        SafeTeleportService teleportHandler = getServiceUnchecked(SafeTeleportService.class);
 
         boolean safe = args.<Boolean>getOne("f").orElse(false);
         boolean border = args.hasAny("b");

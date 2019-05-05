@@ -23,7 +23,7 @@ import io.github.nucleuspowered.nucleus.internal.interfaces.ServiceBase;
 import io.github.nucleuspowered.nucleus.internal.traits.IDataManagerTrait;
 import io.github.nucleuspowered.nucleus.internal.traits.MessageProviderTrait;
 import io.github.nucleuspowered.nucleus.internal.traits.PermissionTrait;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.home.HomeKeys;
 import io.github.nucleuspowered.nucleus.modules.home.commands.SetHomeCommand;
 import io.github.nucleuspowered.nucleus.modules.home.events.AbstractHomeEvent;
@@ -174,9 +174,9 @@ public class HomeService implements NucleusHomeService, MessageProviderTrait, Pe
             ));
         }
 
-        NucleusSafeLocationService safeLocationService = Nucleus.getNucleus()
+        SafeTeleportService safeLocationService = Nucleus.getNucleus()
                 .getInternalServiceManager()
-                .getServiceUnchecked(NucleusSafeLocationService.class);
+                .getServiceUnchecked(SafeTeleportService.class);
         TeleportHelperFilter filter = safeLocationService.getAppropriateFilter(src, safeTeleport);
 
         return safeLocationService.teleportPlayer(

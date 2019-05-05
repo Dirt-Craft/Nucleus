@@ -6,6 +6,7 @@ package io.github.nucleuspowered.nucleus.modules.core.services;
 
 import com.flowpowered.math.vector.Vector3d;
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.EventContexts;
 import io.github.nucleuspowered.nucleus.api.catalogkeys.NucleusTeleportHelperFilters;
 import io.github.nucleuspowered.nucleus.api.service.NucleusSafeTeleportService;
 import io.github.nucleuspowered.nucleus.api.teleport.TeleportResult;
@@ -23,6 +24,7 @@ import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
+import org.spongepowered.api.event.CauseStackManager;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.channel.MessageReceiver;
 import org.spongepowered.api.world.Location;
@@ -38,7 +40,7 @@ import javax.inject.Singleton;
 
 @Singleton
 @APIService(NucleusSafeTeleportService.class)
-public class NucleusSafeLocationService implements NucleusSafeTeleportService, Reloadable, ServiceBase {
+public class SafeTeleportService implements NucleusSafeTeleportService, Reloadable, ServiceBase {
 
     private static final AutoCloseable DUMMY = () -> {};
     private SafeTeleportConfig config = new SafeTeleportConfig();
@@ -141,25 +143,28 @@ public class NucleusSafeLocationService implements NucleusSafeTeleportService, R
                 return TeleportResults.FAIL_CANCELLED;
             }
 
-            Optional<Entity> oe = player.getVehicle();
-            if (oe.isPresent()) {
-                player.setVehicle(null);
-            }
+            try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
+                frame.addContext(EventContexts.BYPASS_JAILING_RESTRICTION, true);
+                Optional<Entity> oe = player.getVehicle();
+                if (oe.isPresent()) {
+                    player.setVehicle(null);
+                }
 
-            // Do it, tell the routine if it worked.
-            if (centreBlock) {
-                targetLocation = new Transform<>(
-                        targetLocation.getExtent(),
-                        targetLocation.getLocation().getBlockPosition().toDouble().add(0.5, 0.5, 0.5),
-                        targetLocation.getRotation());
-            }
+                // Do it, tell the routine if it worked.
+                if (centreBlock) {
+                    targetLocation = new Transform<>(
+                            targetLocation.getExtent(),
+                            targetLocation.getLocation().getBlockPosition().toDouble().add(0.5, 0.5, 0.5),
+                            targetLocation.getRotation());
+                }
 
-            if (player.setTransform(targetLocation)) {
-                player.setSpectatorTarget(null);
-                return TeleportResults.SUCCESS;
-            }
+                if (player.setTransform(targetLocation)) {
+                    player.setSpectatorTarget(null);
+                    return TeleportResults.SUCCESS;
+                }
 
-            oe.ifPresent(player::setVehicle);
+                oe.ifPresent(player::setVehicle);
+            }
         }
 
         return TeleportResults.FAIL_NO_LOCATION;

@@ -12,7 +12,7 @@ import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCom
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
 import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.jump.config.JumpConfigAdapter;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.command.CommandResult;
@@ -61,7 +61,7 @@ public class ThruCommand extends AbstractCommand<Player> implements Reloadable {
                 }
 
                 // If we can go, do so.
-                boolean result = getServiceUnchecked(NucleusSafeLocationService.class)
+                boolean result = getServiceUnchecked(SafeTeleportService.class)
                         .teleportPlayerSmart(
                                 player,
                                 b.getLocation(),

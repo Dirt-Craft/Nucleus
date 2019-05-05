@@ -25,7 +25,7 @@ import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEq
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.warp.WarpParameters;
 import io.github.nucleuspowered.nucleus.modules.warp.config.WarpConfig;
 import io.github.nucleuspowered.nucleus.modules.warp.config.WarpConfigAdapter;
@@ -195,7 +195,7 @@ public class WarpCommand extends AbstractCommand<CommandSource> implements Reloa
         // Warp them.
         boolean isSafe = !args.getOne("f").isPresent() && this.isSafeTeleport;
 
-        NucleusSafeLocationService safeLocationService = getServiceUnchecked(NucleusSafeLocationService.class);
+        SafeTeleportService safeLocationService = getServiceUnchecked(SafeTeleportService.class);
         TeleportHelperFilter filter = safeLocationService.getAppropriateFilter(player, isSafe);
 
         TeleportResult result = safeLocationService.teleportPlayer(

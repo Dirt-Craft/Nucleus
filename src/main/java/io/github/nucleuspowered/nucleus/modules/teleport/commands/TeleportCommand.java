@@ -5,12 +5,12 @@
 package io.github.nucleuspowered.nucleus.modules.teleport.commands;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportResult;
 import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanners;
 import io.github.nucleuspowered.nucleus.argumentparsers.AlternativeUsageArgument;
 import io.github.nucleuspowered.nucleus.argumentparsers.IfConditionElseArgument;
 import io.github.nucleuspowered.nucleus.argumentparsers.NicknameArgument;
 import io.github.nucleuspowered.nucleus.argumentparsers.SelectorArgument;
-import io.github.nucleuspowered.nucleus.configurate.datatypes.LocationNode;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
@@ -22,10 +22,9 @@ import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.messages.MessageProvider;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
-import io.github.nucleuspowered.nucleus.modules.core.CoreKeys;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.teleport.config.TeleportConfigAdapter;
-import io.github.nucleuspowered.nucleus.modules.teleport.services.TeleportHandler;
+import io.github.nucleuspowered.nucleus.modules.teleport.services.PlayerTeleporterService;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -57,8 +56,7 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
     private final String quietKey = "quiet";
 
     private boolean isDefaultQuiet = false;
-
-   //  private final TeleportHandler handler = getServiceUnchecked(TeleportHandler.class);
+    private final PlayerTeleporterService teleporterService = getServiceUnchecked(PlayerTeleporterService.class);
 
     @Override public void onReload() {
         this.isDefaultQuiet = getServiceUnchecked(TeleportConfigAdapter.class).getNodeOrDefault().isDefaultQuiet();
@@ -123,7 +121,9 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
     }
 
     @Override protected ContinueMode preProcessChecks(CommandSource source, CommandContext args) {
-        return TeleportHandler.canTeleportTo(source, args.<User>getOne(NucleusParameters.Keys.PLAYER).get()) ? ContinueMode.CONTINUE : ContinueMode.STOP;
+        return this.teleporterService.canTeleportTo(source, args.requireOne(NucleusParameters.Keys.PLAYER)) ?
+                ContinueMode.CONTINUE :
+                ContinueMode.STOP;
     }
 
     @Override
@@ -147,14 +147,20 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
         }
 
         if (to.getPlayer().isPresent()) {
-            if (this.handler.getBuilder().setSource(src).setFrom(from).setTo(to.getPlayer().get())
-                    .setSafe(!args.hasAny("f"))
-                    .setSilentTarget(beQuiet)
-                    .startTeleport()) {
-                return CommandResult.success();
+            try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
+                frame.pushCause(src);
+                TeleportResult result =
+                        getServiceUnchecked(PlayerTeleporterService.class)
+                                .teleportWithMessage(
+                                        src,
+                                        from,
+                                        to.getPlayer().get(),
+                                        !args.hasAny("f"),
+                                        beQuiet,
+                                        false
+                                );
+                return result.isSuccessful() ? CommandResult.success() : CommandResult.empty();
             }
-
-            return CommandResult.empty();
         }
 
         // We have an offline player.
@@ -162,13 +168,16 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
 
         // Can we get a location?
         Supplier<ReturnMessageException> r = () -> ReturnMessageException.fromKey("command.teleport.nolastknown", to.getName());
-        Location<World> l = getUserOnThread(to.getUniqueId()).orElseThrow(r).get(CoreKeys.LAST_LOCATION).flatMap(LocationNode::getLocationIfExists)
-                .orElseThrow(r);
+        World w = to.getWorldUniqueId().flatMap(x -> Sponge.getServer().getWorld(x)).orElseThrow(r);
+        Location<World> l = new Location<>(
+                w,
+                to.getPosition()
+        );
 
         MessageProvider provider = Nucleus.getNucleus().getMessageProvider();
         try (CauseStackManager.StackFrame frame = Sponge.getCauseStackManager().pushCauseFrame()) {
             frame.pushCause(src);
-            boolean result = getServiceUnchecked(NucleusSafeLocationService.class)
+            boolean result = getServiceUnchecked(SafeTeleportService.class)
                     .teleportPlayerSmart(
                             from,
                             l,

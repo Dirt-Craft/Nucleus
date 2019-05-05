@@ -18,7 +18,7 @@ import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformati
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.back.listeners.BackListeners;
 import io.github.nucleuspowered.nucleus.modules.back.services.BackHandler;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
@@ -71,11 +71,11 @@ public class BackCommand extends AbstractCommand<Player> {
 
         boolean border = args.hasAny("b");
         Transform<World> loc = ol.get();
-        NucleusSafeLocationService service = getServiceUnchecked(NucleusSafeLocationService.class);
+        SafeTeleportService service = getServiceUnchecked(SafeTeleportService.class);
 
         try (AutoCloseable ac = service.temporarilyDisableBorder(border, loc.getExtent())) {
 
-            TeleportResult result = getServiceUnchecked(NucleusSafeLocationService.class)
+            TeleportResult result = getServiceUnchecked(SafeTeleportService.class)
                     .teleportPlayerSmart(
                             src,
                             loc,

@@ -7,12 +7,16 @@ package io.github.nucleuspowered.nucleus.modules.teleport.services;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportResult;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportResults;
+import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanners;
 import io.github.nucleuspowered.nucleus.internal.PermissionRegistry;
 import io.github.nucleuspowered.nucleus.internal.interfaces.ServiceBase;
 import io.github.nucleuspowered.nucleus.internal.messages.MessageProvider;
 import io.github.nucleuspowered.nucleus.internal.traits.MessageProviderTrait;
 import io.github.nucleuspowered.nucleus.internal.traits.PermissionTrait;
 import io.github.nucleuspowered.nucleus.internal.userprefs.UserPreferenceService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.teleport.TeleportUserPrefKeys;
 import io.github.nucleuspowered.nucleus.modules.teleport.commands.TeleportAcceptCommand;
 import io.github.nucleuspowered.nucleus.modules.teleport.commands.TeleportDenyCommand;
@@ -41,6 +45,10 @@ import javax.annotation.Nullable;
 
 public class PlayerTeleporterService implements ServiceBase, MessageProviderTrait, PermissionTrait {
 
+    private final SafeTeleportService safeTeleportService = Nucleus.getNucleus()
+            .getInternalServiceManager()
+            .getServiceUnchecked(SafeTeleportService.class);
+
     private static final String TP_TOGGLE_BYPASS_PERMISSION = PermissionRegistry.PERMISSIONS_PREFIX + "teleport.tptoggle.exempt";
     private static final String TPA_ACCEPT_PERM =
             Nucleus.getNucleus().getPermissionRegistry().getPermissionsForNucleusCommand(TeleportAcceptCommand.class).getBase();
@@ -65,6 +73,40 @@ public class PlayerTeleporterService implements ServiceBase, MessageProviderTrai
 
     private final Map<UUID, TeleportRequest> activeTeleportRequestsCommand = new HashMap<>();
     private final Multimap<UUID, TeleportRequest> activeTeleportRequests = HashMultimap.create();
+
+    public TeleportResult teleportWithMessage(
+            CommandSource source,
+            Player playerToTeleport,
+            Player target,
+            boolean safe,
+            boolean quietSource,
+            boolean quietTarget) {
+
+        TeleportResult result =
+                this.safeTeleportService.teleportPlayerSmart(
+                                playerToTeleport,
+                                target.getTransform(),
+                                false,
+                                safe,
+                                TeleportScanners.NO_SCAN
+                        );
+        if (result.isSuccessful()) {
+            if (!source.equals(target) && !quietSource) {
+                sendMessageTo(source, "teleport.success.source",
+                        playerToTeleport.getName(),
+                        target.getName());
+            }
+
+            sendMessageTo(playerToTeleport, "teleport.to.success", target.getName());
+            if (!quietTarget) {
+                sendMessageTo(target, "teleport.from.success", playerToTeleport.getName());
+            }
+        } else if (!quietSource) {
+            sendMessageTo(source, result == TeleportResults.FAIL_NO_LOCATION ? "teleport.nosafe" : "teleport.cancelled");
+        }
+
+        return result;
+    }
 
     public boolean requestTeleport(
             @Nullable Player requester,

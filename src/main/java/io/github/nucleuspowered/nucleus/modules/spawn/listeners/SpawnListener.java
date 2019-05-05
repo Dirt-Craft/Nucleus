@@ -18,7 +18,7 @@ import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.internal.traits.IDataManagerTrait;
 import io.github.nucleuspowered.nucleus.internal.traits.MessageProviderTrait;
 import io.github.nucleuspowered.nucleus.modules.core.CoreKeys;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.spawn.SpawnKeys;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.GlobalSpawnConfig;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.SpawnConfig;
@@ -114,7 +114,7 @@ public class SpawnListener implements Reloadable, ListenerBase, MessageProviderT
             }
 
             Location<World> lw = world.getSpawnLocation().add(0.5, 0, 0.5);
-            Optional<Location<World>> safe = getServiceUnchecked(NucleusSafeLocationService.class)
+            Optional<Location<World>> safe = getServiceUnchecked(SafeTeleportService.class)
                     .getSafeLocation(
                             lw,
                             TeleportScanners.ASCENDING_SCAN,

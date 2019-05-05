@@ -7,7 +7,6 @@ package io.github.nucleuspowered.nucleus.modules.spawn.commands;
 import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.api.teleport.TeleportResult;
 import io.github.nucleuspowered.nucleus.api.teleport.TeleportScanners;
-import io.github.nucleuspowered.nucleus.configurate.datatypes.LocationNode;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.NoModifiers;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
@@ -16,8 +15,7 @@ import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
-import io.github.nucleuspowered.nucleus.modules.core.CoreKeys;
-import io.github.nucleuspowered.nucleus.modules.core.services.NucleusSafeLocationService;
+import io.github.nucleuspowered.nucleus.modules.core.services.SafeTeleportService;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.GlobalSpawnConfig;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.SpawnConfig;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.SpawnConfigAdapter;
@@ -95,7 +93,7 @@ public class SpawnOtherCommand extends AbstractCommand<CommandSource> implements
 
         // If we don't have a rotation, then use the current rotation
         Player player = target.getPlayer().get();
-        TeleportResult result = getServiceUnchecked(NucleusSafeLocationService.class)
+        TeleportResult result = getServiceUnchecked(SafeTeleportService.class)
                 .teleportPlayerSmart(
                         player,
                         worldTransform,
@@ -117,7 +115,6 @@ public class SpawnOtherCommand extends AbstractCommand<CommandSource> implements
             throw new ReturnMessageException(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.spawnother.offline.permission"));
         }
 
-        getOrCreateUserOnThread(user.getUniqueId()).set(CoreKeys.LOCATION_ON_LOGIN, new LocationNode(worldTransform.getLocation()));
         user.setLocation(worldTransform.getPosition(), worldTransform.getExtent().getUniqueId());
         sendMessageTo(source, "command.spawnother.offline.sendonlogin", user.getName(), worldTransform.getExtent().getName());
         return CommandResult.success();

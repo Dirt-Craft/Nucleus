@@ -19,7 +19,6 @@ import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformati
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.teleport.events.RequestEvent;
 import io.github.nucleuspowered.nucleus.modules.teleport.services.PlayerTeleporterService;
-import io.github.nucleuspowered.nucleus.modules.teleport.services.TeleportHandler;
 import io.github.nucleuspowered.nucleus.util.CauseStackHelper;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandResult;
@@ -62,7 +61,9 @@ public class TeleportAskHereCommand extends AbstractCommand<Player> {
 
     @Override
     protected ContinueMode preProcessChecks(Player source, CommandContext args) {
-        return TeleportHandler.canTeleportTo(source, args.<Player>getOne(NucleusParameters.Keys.PLAYER).get()) ? ContinueMode.CONTINUE : ContinueMode.STOP;
+        return this.playerTeleporterService
+                .canTeleportTo(source, args.<Player>getOne(NucleusParameters.Keys.PLAYER).get()) ?
+                    ContinueMode.CONTINUE : ContinueMode.STOP;
     }
 
     @Override
