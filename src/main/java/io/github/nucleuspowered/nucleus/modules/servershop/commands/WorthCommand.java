@@ -6,7 +6,6 @@ package io.github.nucleuspowered.nucleus.modules.servershop.commands;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.Util;
-import io.github.nucleuspowered.nucleus.argumentparsers.ItemAliasArgument;
 import io.github.nucleuspowered.nucleus.configurate.datatypes.ItemDataNode;
 import io.github.nucleuspowered.nucleus.dataservices.ItemDataService;
 import io.github.nucleuspowered.nucleus.internal.EconHelper;
@@ -17,12 +16,14 @@ import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
 import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEquivalent;
 import io.github.nucleuspowered.nucleus.internal.messages.MessageProvider;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
-import org.spongepowered.api.CatalogType;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
+import org.spongepowered.api.data.type.HandTypes;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
@@ -41,17 +42,20 @@ public class WorthCommand extends AbstractCommand<CommandSource> {
     @Override
     public CommandElement[] getArguments() {
         return new CommandElement[] {
-            GenericArguments.optionalWeak(new ItemAliasArgument(Text.of(this.item)))
+                GenericArguments.optionalWeak(GenericArguments.string(Text.of(this.item)))
         };
     }
 
     @Override
     public CommandResult executeCommand(CommandSource src, CommandContext args, Cause cause) throws Exception {
-        CatalogType type = getCatalogTypeFromHandOrArgs(src, this.item, args);
-        String id = type.getId();
+        if (!(src instanceof Player))
+            throw new CommandException(Util.format("&cOnly a player can use this command!"));
+        //CatalogType type = getCatalogTypeFromHandOrArgs(src, this.item, args);
+        //String id = type.getId();
+        String itemID = getItemIDFromHandOrArgs(src, this.item, args);
 
         // Get the item from the system.
-        ItemDataNode node = this.itemDataService.getDataForItem(id);
+        ItemDataNode node = this.itemDataService.getDataForItem(itemID);
 
         // Get the current item worth.
         MessageProvider provider = Nucleus.getNucleus().getMessageProvider();
@@ -62,26 +66,37 @@ public class WorthCommand extends AbstractCommand<CommandSource> {
         double buyPrice = node.getServerBuyPrice();
         double sellPrice = node.getServerSellPrice();
 
-        StringBuilder stringBuilder = new StringBuilder();
 
-        if (buyPrice >= 0) {
-            stringBuilder.append(provider.getMessageWithFormat("command.worth.buy", this.econHelper.getCurrencySymbol(node.getServerBuyPrice())));
-        }
+        Player player = (Player) src;
+        int quantity = player.getItemInHand(HandTypes.MAIN_HAND).get().getQuantity();
 
-        if (sellPrice >= 0) {
-            if (stringBuilder.length() > 0) {
-                stringBuilder.append(" - ");
+        String price = this.econHelper.getCurrencySymbol(node.getServerBuyPrice() * quantity);
+
+        if (buyPrice > 0 || sellPrice > 0) {
+            if (quantity > 1) {
+                src.sendMessage(Util.format(
+                        "&6&l" + quantity + " &b" + player.getItemInHand(HandTypes.MAIN_HAND).get().getType().getName() + "&7's are worth &a$" + price));
+            } else {
+                src.sendMessage(Util.format(
+                        "A &b" + player.getItemInHand(HandTypes.MAIN_HAND).get().getType().getName() + "&7 is worth &a$" + price));
             }
-
-            stringBuilder.append(provider.getMessageWithFormat("command.worth.sell", this.econHelper.getCurrencySymbol(node.getServerSellPrice())));
-        }
-
-        if (stringBuilder.length() == 0) {
-            src.sendMessage(provider.getTextMessageWithFormat("command.worth.nothing", Util.getTranslatableIfPresentOnCatalogType(type)));
         } else {
-            src.sendMessage(provider.getTextMessageWithFormat("command.worth.something", Util.getTranslatableIfPresentOnCatalogType(type), stringBuilder.toString()));
+            src.sendMessage(Util.format(
+                    "&b" + player.getItemInHand(HandTypes.MAIN_HAND).get().getType().getName() + "&7 does &cnot&7 have a worth set!" +
+                            "\nContact a moderator or above to set one!"));
         }
+
+        /*if (stringBuilder.length() == 0) {
+            //src.sendMessage(provider.getTextMessageWithFormat("command.worth.nothing", Util.getTranslatableIfPresentOnCatalogType(type)));
+            //src.sendMessage(provider.getTextMessageWithFormat("command.worth.nothing", itemID));
+            src.sendMessage(Util.format("&7This item does &cnot&7 have a worth set!"));
+        } else {
+            //src.sendMessage(provider.getTextMessageWithFormat("command.worth.something", Util.getTranslatableIfPresentOnCatalogType(type), stringBuilder.toString()));
+            //src.sendMessage(provider.getTextMessageWithFormat("command.worth.something", itemID, stringBuilder.toString()));
+            src.sendMessage(Util.format(stringBuilder.toString()));
+        }*/
 
         return CommandResult.success();
     }
+
 }

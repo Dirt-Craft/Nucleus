@@ -25,12 +25,7 @@ import org.spongepowered.api.event.Event;
 import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.event.message.MessageEvent;
 import org.spongepowered.api.item.ItemType;
-import org.spongepowered.api.item.inventory.Carrier;
-import org.spongepowered.api.item.inventory.Inventory;
-import org.spongepowered.api.item.inventory.InventoryArchetypes;
-import org.spongepowered.api.item.inventory.InventoryTransformations;
-import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.item.inventory.*;
 import org.spongepowered.api.item.inventory.entity.MainPlayerInventory;
 import org.spongepowered.api.item.inventory.property.InventoryDimension;
 import org.spongepowered.api.item.inventory.query.QueryOperationTypes;
@@ -42,11 +37,13 @@ import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.TextRepresentable;
 import org.spongepowered.api.text.TextTemplate;
+import org.spongepowered.api.text.serializer.TextSerializers;
 import org.spongepowered.api.text.translation.Translatable;
 import org.spongepowered.api.util.Identifiable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import javax.annotation.Nullable;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -60,14 +57,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
@@ -76,12 +66,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
-import javax.annotation.Nullable;
-
 public class Util {
 
-    private Util() {
-    }
+    private Util() { }
 
     public static final DateTimeFormatter FULL_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL)
             .withZone(ZoneId.systemDefault());
@@ -106,6 +93,10 @@ public class Util {
                 MessageEvent.PARAM_MESSAGE_HEADER, header,
                 MessageEvent.PARAM_MESSAGE_BODY, body,
                 MessageEvent.PARAM_MESSAGE_FOOTER, footer)).build();
+    }
+
+    public static Text format(String unformattedString) {
+        return TextSerializers.FORMATTING_CODE.deserialize(unformattedString);
     }
 
     public static UUID getUUID(CommandSource src) {

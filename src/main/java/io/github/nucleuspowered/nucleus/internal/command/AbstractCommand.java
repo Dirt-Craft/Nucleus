@@ -21,17 +21,7 @@ import io.github.nucleuspowered.nucleus.internal.CostCancellableTask;
 import io.github.nucleuspowered.nucleus.internal.TimingsDummy;
 import io.github.nucleuspowered.nucleus.internal.annotations.RequiresEconomy;
 import io.github.nucleuspowered.nucleus.internal.annotations.RunAsync;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.NoCommandPrefix;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.NoCooldown;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.NoCost;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.NoHelpSubcommand;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.NoModifiers;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.NoTimings;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.NoWarmup;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.PermissionsFrom;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.RedirectModifiers;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
-import io.github.nucleuspowered.nucleus.internal.annotations.command.SetCooldownManually;
+import io.github.nucleuspowered.nucleus.internal.annotations.command.*;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.traits.InternalServiceManagerTrait;
 import io.github.nucleuspowered.nucleus.internal.traits.MessageProviderTrait;
@@ -44,23 +34,18 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.command.CommandCallable;
-import org.spongepowered.api.command.CommandException;
-import org.spongepowered.api.command.CommandPermissionException;
-import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.ArgumentParseException;
-import org.spongepowered.api.command.args.CommandArgs;
-import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.args.CommandElement;
-import org.spongepowered.api.command.args.GenericArguments;
+import org.spongepowered.api.command.*;
+import org.spongepowered.api.command.args.*;
 import org.spongepowered.api.command.args.parsing.InputTokenizer;
 import org.spongepowered.api.command.args.parsing.SingleArg;
 import org.spongepowered.api.command.dispatcher.SimpleDispatcher;
 import org.spongepowered.api.command.source.CommandBlockSource;
 import org.spongepowered.api.command.source.ConsoleSource;
 import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
@@ -81,22 +66,15 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.Modifier;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * The basis for any command.
@@ -1025,6 +1003,35 @@ public abstract class AbstractCommand<T extends CommandSource> implements Comman
 
             throw new ReturnMessageException(this.plugin.getMessageProvider().getTextMessageWithFormat("command.noitemconsole"));
         }
+    }
+
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    protected final String getItemIDFromHandOrArgs(CommandSource src, String argument, CommandContext args) throws ReturnMessageException {
+        String itemID;
+        if (args.getOne(argument).isPresent()) {
+            return args.<String>getOne(argument).get();
+        } else {
+            if (src instanceof Player) {
+                Player player = (Player) src;
+                Optional<ItemStack> hand = player.getItemInHand(HandTypes.MAIN_HAND);
+                if (hand.isPresent()) {
+                    DataContainer container = hand.get().toContainer();
+                    DataQuery query = DataQuery.of('/', "UnsafeDamage");
+
+                    int unsafeDamage = Integer.parseInt(container.get(query).get().toString());
+
+                    itemID = hand.get().getType().getId();
+
+                    if (unsafeDamage != 0) {
+                        itemID = itemID + ":" + unsafeDamage;
+                    }
+                    return itemID;
+                }
+                return "";
+            }
+        }
+        return "";
     }
 
     // -------------------------------------
