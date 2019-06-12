@@ -72,7 +72,7 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
 
     @Override
     public CommandElement[] getArguments() {
-       return new CommandElement[]{
+       return new CommandElement[] {
                 GenericArguments.flags().flag("f")
                     .setAnchorFlags(true)
                     .valueFlag(requirePermissionArg(GenericArguments.bool(Text.of(this.quietKey)), this.permissions.getPermissionWithSuffix("quiet")), "q")

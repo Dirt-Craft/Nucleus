@@ -5,6 +5,7 @@
 package io.github.nucleuspowered.nucleus.modules.teleport.commands;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.Util;
 import io.github.nucleuspowered.nucleus.internal.annotations.RunAsync;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.NoWarmup;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.NotifyIfAFK;
@@ -86,7 +87,10 @@ public class TeleportAskCommand extends AbstractCommand<Player> implements Reloa
 
     @Override protected ContinueMode preProcessChecks(Player source, CommandContext args) {
         Optional<Player> player = Sponge.getServer().getPlayer(args.<String>getOne(Text.of("player")).get());
-        if(!player.isPresent()) return ContinueMode.STOP;
+        if(!player.isPresent()) {
+            source.sendMessage(Util.format("&cPlayer &e" + args.<String>getOne("player").get() + "&c is not online!"));
+            return ContinueMode.STOP;
+        }
         return TeleportHandler.canTeleportTo(permissions, source, player.get()) ? ContinueMode.CONTINUE : ContinueMode.STOP;
     }
 
