@@ -73,7 +73,7 @@ public class TeleportAskHereCommand extends AbstractCommand<Player> {
 
     @Override
     public CommandResult executeCommand(Player src, CommandContext args, Cause cause) throws Exception {
-        Player target = args.<Player>getOne(NucleusParameters.Keys.PLAYER).get();
+        Player target = Sponge.getServer().getPlayer(args.<String>getOne("player").get()).get();
         if (src.equals(target)) {
             src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.teleport.self"));
             return CommandResult.empty();
