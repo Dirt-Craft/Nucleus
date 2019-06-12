@@ -21,6 +21,7 @@ import io.github.nucleuspowered.nucleus.internal.messages.MessageProvider;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.internal.teleport.NucleusTeleportHandler;
+import io.github.nucleuspowered.nucleus.modules.core.datamodules.CoreUserDataModule;
 import io.github.nucleuspowered.nucleus.modules.teleport.config.TeleportConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.teleport.services.TeleportHandler;
 import io.github.nucleuspowered.nucleus.util.CauseStackHelper;
@@ -30,6 +31,7 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
@@ -70,7 +72,7 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
 
     @Override
     public CommandElement[] getArguments() {
-       return new CommandElement[] {
+       return new CommandElement[]{
                 GenericArguments.flags().flag("f")
                     .setAnchorFlags(true)
                     .valueFlag(requirePermissionArg(GenericArguments.bool(Text.of(this.quietKey)), this.permissions.getPermissionWithSuffix("quiet")), "q")
@@ -78,8 +80,8 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
 
                     new AlternativeUsageArgument(
                         GenericArguments.seq(
-                                IfConditionElseArgument.permission(this.permissions.getBase(),
-                                        NucleusParameters.ONE_PLAYER,
+                                IfConditionElseArgument.permission(this.permissions.getPermissionWithSuffix("offline"),
+                                        NucleusParameters.ONE_USER_PLAYER_KEY,
                                         NucleusParameters.ONE_PLAYER),
 
                             new IfConditionElseArgument(
@@ -108,7 +110,7 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
     private boolean testForSecondPlayer(CommandSource source, CommandContext context) {
         try {
             if (context.hasAny(NucleusParameters.Keys.PLAYER) && this.permissions.testOthers(source)) {
-                return context.<Player>getOne(NucleusParameters.Keys.PLAYER).map(y -> y.getPlayer().isPresent()).orElse(false);
+                return context.<User>getOne(NucleusParameters.Keys.PLAYER).map(y -> y.getPlayer().isPresent()).orElse(false);
             }
         } catch (Exception e) {
             // ignored
@@ -118,17 +120,17 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
     }
 
     @Override protected ContinueMode preProcessChecks(CommandSource source, CommandContext args) {
-        return TeleportHandler.canTeleportTo(permissions, source, args.<Player>getOne(NucleusParameters.Keys.PLAYER).get()) ? ContinueMode.CONTINUE : ContinueMode.STOP;
+        return TeleportHandler.canTeleportTo(permissions, source, args.<User>getOne(NucleusParameters.Keys.PLAYER).get()) ? ContinueMode.CONTINUE : ContinueMode.STOP;
     }
 
     @Override
     public CommandResult executeCommand(CommandSource src, CommandContext args, Cause cause) throws Exception {
         boolean beQuiet = args.<Boolean>getOne(this.quietKey).orElse(this.isDefaultQuiet);
         Optional<Player> oTo = args.getOne(this.playerToKey);
-        Player to;
+        User to;
         Player from;
         if (oTo.isPresent()) { // Two player argument.
-            from = args.<Player>getOne(NucleusParameters.Keys.PLAYER).map(x -> x.getPlayer().orElse(null))
+            from = args.<User>getOne(NucleusParameters.Keys.PLAYER).map(x -> x.getPlayer().orElse(null))
                 .orElseThrow(() -> ReturnMessageException.fromKey("command.playeronly"));
             to = oTo.get();
             if (to.equals(src)) {
@@ -136,7 +138,7 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
             }
         } else if (src instanceof Player) {
             from = (Player) src;
-            to = args.<Player>getOne(NucleusParameters.Keys.PLAYER).get();
+            to = args.<User>getOne(NucleusParameters.Keys.PLAYER).get();
         } else {
             throw ReturnMessageException.fromKey("command.playeronly");
         }
@@ -157,7 +159,8 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
 
         // Can we get a location?
         Supplier<ReturnMessageException> r = () -> ReturnMessageException.fromKey("command.teleport.nolastknown", to.getName());
-        Location<World> l = to.getLocation();
+        Location<World> l = Nucleus.getNucleus().getUserDataManager().get(to.getUniqueId()).orElseThrow(r).get(CoreUserDataModule.class).getLogoutLocation()
+                .orElseThrow(r);
 
         MessageProvider provider = Nucleus.getNucleus().getMessageProvider();
         if (CauseStackHelper.createFrameWithCausesWithReturn(c ->

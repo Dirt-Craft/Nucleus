@@ -5,7 +5,6 @@
 package io.github.nucleuspowered.nucleus.modules.teleport.commands;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
-import io.github.nucleuspowered.nucleus.Util;
 import io.github.nucleuspowered.nucleus.internal.annotations.RunAsync;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.NoWarmup;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.NotifyIfAFK;
@@ -28,7 +27,6 @@ import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.text.Text;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -58,22 +56,18 @@ public class TeleportAskHereCommand extends AbstractCommand<Player> {
         return new CommandElement[] {
             GenericArguments.flags()
                     .permissionFlag(this.permissions.getPermissionWithSuffix("force"), "f")
-                    .buildWith(GenericArguments.string(Text.of("player")))
+                    .buildWith(NucleusParameters.ONE_PLAYER)
         };
     }
 
     @Override
     protected ContinueMode preProcessChecks(Player source, CommandContext args) {
-        if (!Sponge.getServer().getPlayer(args.<String>getOne("player").get()).isPresent()) {
-            source.sendMessage(Util.format("&cThe player &e" + args.<String>getOne("player").get() + " &cis not online!"));
-            return ContinueMode.STOP;
-        }
         return TeleportHandler.canTeleportTo(permissions, source, args.<Player>getOne(NucleusParameters.Keys.PLAYER).get()) ? ContinueMode.CONTINUE : ContinueMode.STOP;
     }
 
     @Override
     public CommandResult executeCommand(Player src, CommandContext args, Cause cause) throws Exception {
-        Player target = Sponge.getServer().getPlayer(args.<String>getOne("player").get()).get();
+        Player target = args.<Player>getOne(NucleusParameters.Keys.PLAYER).get();
         if (src.equals(target)) {
             src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.teleport.self"));
             return CommandResult.empty();
