@@ -7,6 +7,7 @@ package io.github.nucleuspowered.nucleus.modules.teleport.commands;
 import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.Util;
 import io.github.nucleuspowered.nucleus.dataservices.modular.ModularUserService;
+import io.github.nucleuspowered.nucleus.internal.annotations.RunAsync;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.NoModifiers;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
@@ -47,6 +48,7 @@ import java.util.Optional;
 @EssentialsEquivalent(value = {"tphere", "s", "tpohere"}, isExact = false,
         notes = "If you have permission, this will override '/tptoggle' automatically.")
 @NonnullByDefault
+@RunAsync
 public class TeleportHereCommand extends AbstractCommand<Player> implements Reloadable {
 
     private final TeleportHandler handler = getServiceUnchecked(TeleportHandler.class);
