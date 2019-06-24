@@ -30,14 +30,12 @@ import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Sends a request to a subject to teleport to them, using click handlers.
@@ -62,38 +60,20 @@ public class TeleportAskCommand extends AbstractCommand<Player> implements Reloa
         return m;
     }
 
-    /*
     @Override
     public CommandElement[] getArguments() {
         return new CommandElement[] {
                 GenericArguments.flags().permissionFlag(this.permissions.getPermissionWithSuffix("force"), "f").buildWith(NucleusParameters.ONE_PLAYER)
         };
     }
-     */
 
-    @Override
-    public CommandElement[] getArguments() {
-        return new CommandElement[] {
-                GenericArguments.flags().permissionFlag(this.permissions.getPermissionWithSuffix("force"), "f").buildWith(GenericArguments.string(Text.of("player")))
-        };
-    }
-
-    /*
     @Override protected ContinueMode preProcessChecks(Player source, CommandContext args) {
         return TeleportHandler.canTeleportTo(permissions, source, args.requireOne(NucleusParameters.Keys.PLAYER)) ? ContinueMode.CONTINUE : ContinueMode.STOP;
-    }
-     */
-
-    @Override protected ContinueMode preProcessChecks(Player source, CommandContext args) {
-        Optional<Player> player = Sponge.getServer().getPlayer(args.<String>getOne(Text.of("player")).get());
-        if(!player.isPresent()) return ContinueMode.STOP;
-        return TeleportHandler.canTeleportTo(permissions, source, player.get()) ? ContinueMode.CONTINUE : ContinueMode.STOP;
     }
 
     @Override
     public CommandResult executeCommand(Player src, CommandContext args, Cause cause) throws Exception {
-        //Player target = args.requireOne(NucleusParameters.Keys.PLAYER);
-        Player target = Sponge.getServer().getPlayer(args.<String>getOne(Text.of("player")).get()).get();
+        Player target = args.requireOne(NucleusParameters.Keys.PLAYER);
         if (src.equals(target)) {
             src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.teleport.self"));
             return CommandResult.empty();
