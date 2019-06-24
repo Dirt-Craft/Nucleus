@@ -9,6 +9,7 @@ import io.github.nucleuspowered.nucleus.argumentparsers.AlternativeUsageArgument
 import io.github.nucleuspowered.nucleus.argumentparsers.IfConditionElseArgument;
 import io.github.nucleuspowered.nucleus.argumentparsers.NicknameArgument;
 import io.github.nucleuspowered.nucleus.argumentparsers.SelectorArgument;
+import io.github.nucleuspowered.nucleus.internal.annotations.RunAsync;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
@@ -78,9 +79,8 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
 
                     new AlternativeUsageArgument(
                         GenericArguments.seq(
-                                IfConditionElseArgument.permission(this.permissions.getBase(),
                                         NucleusParameters.ONE_PLAYER,
-                                        NucleusParameters.ONE_PLAYER),
+                                        NucleusParameters.ONE_PLAYER,
 
                             new IfConditionElseArgument(
                                 GenericArguments.optionalWeak(
