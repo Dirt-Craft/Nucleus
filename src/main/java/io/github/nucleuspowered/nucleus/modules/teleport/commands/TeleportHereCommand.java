@@ -5,13 +5,13 @@
 package io.github.nucleuspowered.nucleus.modules.teleport.commands;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
-import io.github.nucleuspowered.nucleus.Util;
+import io.github.nucleuspowered.nucleus.argumentparsers.IfConditionElseArgument;
 import io.github.nucleuspowered.nucleus.dataservices.modular.ModularUserService;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.NoModifiers;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
-import io.github.nucleuspowered.nucleus.internal.command.ContinueMode;
+import io.github.nucleuspowered.nucleus.internal.command.NucleusParameters;
 import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEquivalent;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
@@ -20,7 +20,6 @@ import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.core.datamodules.CoreUserDataModule;
 import io.github.nucleuspowered.nucleus.modules.teleport.config.TeleportConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.teleport.services.TeleportHandler;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
@@ -28,13 +27,10 @@ import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.service.user.UserStorageService;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * NOTE: TeleportHere is considered an admin command, as there is a potential
@@ -64,30 +60,20 @@ public class TeleportHereCommand extends AbstractCommand<Player> implements Relo
         return m;
     }
 
-    @Override protected ContinueMode preProcessChecks(Player source, CommandContext args) {
-        UserStorageService userStorageService = Sponge.getServiceManager().provide(UserStorageService.class).get();
-        Optional<User> user =  userStorageService.get(args.<String>getOne(Text.of("user")).get());
-        if (!user.isPresent()) {
-            source.sendMessage(Util.format("&cCould not get last location for user"));
-            return ContinueMode.STOP;
-        }
-        return TeleportHandler.canTeleportTo(permissions, source, user.get()) ? ContinueMode.CONTINUE : ContinueMode.STOP;
-    }
-
     @Override
     public CommandElement[] getArguments() {
         return new CommandElement[] {
                 GenericArguments.flags().flag("q", "-quiet").buildWith(
-                                GenericArguments.string(Text.of("user")))
+                        IfConditionElseArgument.permission(this.permissions.getPermissionWithSuffix("offline"),
+                                NucleusParameters.ONE_USER_PLAYER_KEY,
+                                NucleusParameters.ONE_PLAYER))
         };
     }
 
     @Override
     public CommandResult executeCommand(Player src, CommandContext args, Cause cause) throws Exception {
         boolean beQuiet = args.<Boolean>getOne("q").orElse(this.isDefaultQuiet);
-        UserStorageService userStorageService = Sponge.getServiceManager().provide(UserStorageService.class).get();
-        User target = userStorageService.get(args.<String>getOne("user").get()).get();
-
+        User target = args.<User>getOne(NucleusParameters.Keys.PLAYER).get();
         if (target.getPlayer().isPresent()) {
             this.handler.getBuilder().setFrom(target.getPlayer().get()).setTo(src).setSilentSource(beQuiet).startTeleport();
         } else {
