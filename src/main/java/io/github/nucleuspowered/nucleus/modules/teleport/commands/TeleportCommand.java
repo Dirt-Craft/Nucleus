@@ -9,7 +9,6 @@ import io.github.nucleuspowered.nucleus.argumentparsers.AlternativeUsageArgument
 import io.github.nucleuspowered.nucleus.argumentparsers.IfConditionElseArgument;
 import io.github.nucleuspowered.nucleus.argumentparsers.NicknameArgument;
 import io.github.nucleuspowered.nucleus.argumentparsers.SelectorArgument;
-import io.github.nucleuspowered.nucleus.internal.annotations.RunAsync;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
@@ -49,7 +48,6 @@ import java.util.function.Supplier;
 @EssentialsEquivalent(value = {"tp", "tele", "tp2p", "teleport", "tpo"}, isExact = false,
         notes = "If you have permission, this will override '/tptoggle' automatically.")
 @NonnullByDefault
-@RunAsync
 public class TeleportCommand extends AbstractCommand<CommandSource> implements Reloadable {
 
     private final String playerToKey = "Player to warp to";
