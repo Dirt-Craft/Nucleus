@@ -78,7 +78,7 @@ public class WorthCommand extends AbstractCommand<CommandSource> {
                         "&6&l" + quantity + " &b" + player.getItemInHand(HandTypes.MAIN_HAND).get().getType().getName() + "&7's are worth &a$" + price));
             } else {
                 src.sendMessage(Util.format(
-                        "&7A &b" + player.getItemInHand(HandTypes.MAIN_HAND).get().getType().getName() + "&7 is worth &a$" + price));
+                        "A &b" + player.getItemInHand(HandTypes.MAIN_HAND).get().getType().getName() + "&7 is worth &a$" + price));
             }
         } else {
             src.sendMessage(Util.format(
