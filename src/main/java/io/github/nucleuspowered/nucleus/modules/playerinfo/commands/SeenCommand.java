@@ -15,6 +15,7 @@ import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
 import io.github.nucleuspowered.nucleus.internal.command.CommandBuilder;
+import io.github.nucleuspowered.nucleus.internal.command.NucleusParameters;
 import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEquivalent;
 import io.github.nucleuspowered.nucleus.internal.messages.MessageProvider;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
@@ -36,7 +37,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.service.pagination.PaginationService;
-import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
@@ -47,14 +47,19 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
-import javax.annotation.Nullable;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
 
 // TODO: 7.1 cleanup
 @Permissions
@@ -214,15 +219,17 @@ public class SeenCommand extends AbstractCommand<CommandSource> {
     @Override
     public CommandElement[] getArguments() {
         return new CommandElement[] {
-                GenericArguments.string(Text.of("user"))
+            GenericArguments.firstParsing(
+                NucleusParameters.ONE_USER_UUID,
+                NucleusParameters.ONE_USER
+            )
         };
     }
 
     @Override
     public CommandResult executeCommand(CommandSource src, CommandContext args, Cause cause) {
-        //User user = args.<User>getOne(NucleusParameters.Keys.USER_UUID)
-        //        .orElseGet(() -> args.<User>getOne(NucleusParameters.Keys.USER).get());
-        User user = Sponge.getServiceManager().provide(UserStorageService.class).get().get(args.<String>getOne("user").get()).get();
+        User user = args.<User>getOne(NucleusParameters.Keys.USER_UUID)
+                .orElseGet(() -> args.<User>getOne(NucleusParameters.Keys.USER).get());
         // Get the player in case the User is displaying the wrong name.
         user = user.getPlayer().map(x -> (User) x).orElse(user);
 

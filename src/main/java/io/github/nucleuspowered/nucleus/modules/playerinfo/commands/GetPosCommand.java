@@ -6,8 +6,6 @@ package io.github.nucleuspowered.nucleus.modules.playerinfo.commands;
 
 import com.flowpowered.math.vector.Vector3i;
 import io.github.nucleuspowered.nucleus.Nucleus;
-import io.github.nucleuspowered.nucleus.Util;
-import io.github.nucleuspowered.nucleus.internal.annotations.RunAsync;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
@@ -16,8 +14,6 @@ import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEq
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.core.datamodules.CoreUserDataModule;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
@@ -26,7 +22,6 @@ import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
@@ -39,7 +34,6 @@ import java.util.Map;
 @RegisterCommand({"getpos", "coords", "position", "whereami", "getlocation", "getloc"})
 @EssentialsEquivalent({"getpos", "coords", "position", "whereami", "getlocation", "getloc"})
 @NonnullByDefault
-@RunAsync
 public class GetPosCommand extends AbstractCommand<CommandSource> {
 
     private final String playerKey = "subject";
@@ -56,24 +50,20 @@ public class GetPosCommand extends AbstractCommand<CommandSource> {
 
     @Override public CommandElement[] getArguments() {
         return new CommandElement[] {
-            GenericArguments.optionalWeak(GenericArguments.string(Text.of("user")))
+            GenericArguments.optionalWeak(requirePermissionArg(GenericArguments.user(Text.of(this.playerKey)), this.permissions.getOthers()))
         };
     }
 
     @Override protected CommandResult executeCommand(CommandSource src, CommandContext args, Cause cause) throws Exception {
-        User user = Sponge.getServiceManager().provide(UserStorageService.class).get().get(args.<String>getOne("user").get()).get();
+        User user = this.getUserFromArgs(User.class, src, this.playerKey, args);
         Location<World> location;
         if (user.isOnline()) {
             location = user.getPlayer().get().getLocation();
         } else {
-            try {
-                location = Nucleus.getNucleus().getUserDataManager().get(user)
-                        .orElseThrow(() -> ReturnMessageException.fromKey("command.getpos.location.nolocation", user.getName()))
-                        .get(CoreUserDataModule.class).getLogoutLocation()
-                        .orElseThrow(() -> ReturnMessageException.fromKey("command.getpos.location.nolocation", user.getName()));
-            } catch (ReturnMessageException exception) {
-                throw new CommandException(Util.format("&cCould not receive last location for &e" + args.<String>getOne("user").get()));
-            }
+            location = Nucleus.getNucleus().getUserDataManager().get(user)
+                    .orElseThrow(() -> ReturnMessageException.fromKey("command.getpos.location.nolocation", user.getName()))
+                    .get(CoreUserDataModule.class).getLogoutLocation()
+                    .orElseThrow(() -> ReturnMessageException.fromKey("command.getpos.location.nolocation", user.getName()));
         }
 
         boolean isSelf = src instanceof Player && ((Player) src).getUniqueId().equals(user.getUniqueId());
