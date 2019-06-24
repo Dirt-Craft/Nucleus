@@ -47,6 +47,7 @@ import java.util.function.Supplier;
 @EssentialsEquivalent(value = {"tp", "tele", "tp2p", "teleport", "tpo"}, isExact = false,
         notes = "If you have permission, this will override '/tptoggle' automatically.")
 @NonnullByDefault
+@RunAsync
 public class TeleportCommand extends AbstractCommand<CommandSource> implements Reloadable {
 
     private final String playerToKey = "Player to warp to";
@@ -79,8 +80,9 @@ public class TeleportCommand extends AbstractCommand<CommandSource> implements R
 
                     new AlternativeUsageArgument(
                         GenericArguments.seq(
+                                IfConditionElseArgument.permission(this.permissions.getPermissionWithSuffix("offline"),
                                         NucleusParameters.ONE_PLAYER,
-                                        NucleusParameters.ONE_PLAYER,
+                                        NucleusParameters.ONE_PLAYER),
 
                             new IfConditionElseArgument(
                                 GenericArguments.optionalWeak(
