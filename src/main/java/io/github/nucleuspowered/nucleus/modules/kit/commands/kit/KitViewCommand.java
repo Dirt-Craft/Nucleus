@@ -42,7 +42,7 @@ public class KitViewCommand extends KitFallbackBase<Player> implements Reloadabl
 
     @Override public CommandElement[] getArguments() {
         return new CommandElement[] {
-                KitFallbackBase.KIT_PARAMETER_PERM_CHECK
+                KitFallbackBase.KIT_PARAMETER_NO_PERM_CHECK
         };
     }
 
