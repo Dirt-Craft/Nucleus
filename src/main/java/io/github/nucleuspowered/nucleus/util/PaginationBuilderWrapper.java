@@ -9,12 +9,12 @@ import com.google.common.collect.Lists;
 import io.github.nucleuspowered.nucleus.Util;
 import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.serializer.TextSerializers;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.ListIterator;
-
-import javax.annotation.Nullable;
 
 @NonnullByDefault
 public class PaginationBuilderWrapper implements PaginationList.Builder {
@@ -52,7 +52,7 @@ public class PaginationBuilderWrapper implements PaginationList.Builder {
     }
 
     @Override public PaginationList.Builder padding(Text padding) {
-        this.builder.padding(padding);
+        this.builder.padding(TextSerializers.FORMATTING_CODE.deserialize("&4&m-"));
         return this;
     }
 
