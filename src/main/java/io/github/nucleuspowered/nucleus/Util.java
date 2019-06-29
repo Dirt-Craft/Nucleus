@@ -449,7 +449,7 @@ public class Util {
             plb.linesPerPage(-1);
         }
 
-        return new PaginationBuilderWrapper(plb);
+        return new PaginationBuilderWrapper(plb).padding(TextSerializers.FORMATTING_CODE.deserialize("&4&m-"));
     }
 
     public static Inventory.Builder getKitInventoryBuilder() {
