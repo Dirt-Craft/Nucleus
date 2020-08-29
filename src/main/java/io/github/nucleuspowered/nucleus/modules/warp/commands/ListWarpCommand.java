@@ -4,6 +4,7 @@
  */
 package io.github.nucleuspowered.nucleus.modules.warp.commands;
 
+import com.flowpowered.math.vector.Vector3i;
 import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.Util;
 import io.github.nucleuspowered.nucleus.api.nucleusdata.Warp;
@@ -31,7 +32,6 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
 
 import java.util.Comparator;
 import java.util.List;
@@ -145,12 +145,13 @@ public class ListWarpCommand extends AbstractCommand<CommandSource> implements R
     }
 
     private Text createWarp(@Nullable Warp data, String name, boolean econExists, double defaultCost) {
-        if (data == null || !data.getLocation().isPresent()) {
+        if (data == null || data.getWorldProperties().map(x -> !x.isEnabled()).orElse(true)) {
             return Text.builder(name).color(TextColors.RED).onHover(TextActions.showText(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat
                     ("command.warps.unavailable"))).build();
         }
 
-        Location<World> world = data.getLocation().get();
+        Vector3i pos = data.getLocation().map(Location::getBlockPosition).orElseGet(() -> data.getPosition().toInt());
+        // Location<World> world = data.getLocation().get();
 
         Text.Builder inner = Text.builder(name).color(TextColors.GREEN).style(TextStyles.ITALIC)
                 .onClick(TextActions.runCommand("/warp \"" + name + "\""));
@@ -161,8 +162,9 @@ public class ListWarpCommand extends AbstractCommand<CommandSource> implements R
             Text.Builder hoverBuilder = Text.builder()
                     .append(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.warps.warpprompt", name))
                     .append(Text.NEW_LINE)
-                    .append(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.warps.warplochover", world.getExtent().getName(),
-                            world.getBlockPosition().toString()));
+                    .append(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.warps.warplochover",
+                            data.getWorldProperties().get().getWorldName(),
+                            pos.toString()));
 
             if (econExists) {
                 double cost = data.getCost().orElse(defaultCost);
@@ -190,7 +192,8 @@ public class ListWarpCommand extends AbstractCommand<CommandSource> implements R
 
             tb = Text.builder().append(inner.build())
                             .append(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.warps.warploc",
-                                    world.getExtent().getName(), world.getBlockPosition().toString()
+                                    data.getWorldProperties().get().getWorldName(),
+                                    pos.toString()
                             ));
 
             if (econExists) {

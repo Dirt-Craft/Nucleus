@@ -12,4 +12,5 @@ public interface PermissionResolver {
     PermissionResolver SIMPLE = Subject::hasPermission;
 
     boolean hasPermission(Subject subject, String permission);
+
 }

@@ -5,6 +5,7 @@
 package io.github.nucleuspowered.nucleus.modules.spawn.commands;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.EventContexts;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.NoModifiers;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
@@ -31,6 +32,7 @@ import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 import org.spongepowered.api.world.World;
@@ -77,7 +79,8 @@ public class SpawnOtherCommand extends AbstractCommand<CommandSource> implements
 
         Transform<World> worldTransform = SpawnHelper.getSpawn(world, target.getPlayer().orElse(null));
 
-        SendToSpawnEvent event = new SendToSpawnEvent(worldTransform, target, CauseStackHelper.createCause(src));
+        EventContext context = EventContext.builder().add(EventContexts.SPAWN_EVENT_TYPE, SendToSpawnEvent.Type.COMMAND).build();
+        SendToSpawnEvent event = new SendToSpawnEvent(worldTransform, target, CauseStackHelper.createCause(context, src));
         if (Sponge.getEventManager().post(event)) {
             if (event.getCancelReason().isPresent()) {
                 throw new ReturnMessageException(Nucleus
@@ -88,12 +91,12 @@ public class SpawnOtherCommand extends AbstractCommand<CommandSource> implements
         }
 
         if (!target.isOnline()) {
-            return isOffline(src, target, worldTransform);
+            return isOffline(src, target, event.getTransformTo());
         }
 
         // If we don't have a rotation, then use the current rotation
         Player player = target.getPlayer().get();
-        NucleusTeleportHandler.TeleportResult result = Nucleus.getNucleus().getTeleportHandler().teleportPlayer(player, worldTransform, this
+        NucleusTeleportHandler.TeleportResult result = Nucleus.getNucleus().getTeleportHandler().teleportPlayer(player, event.getTransformTo(), this
                 .safeTeleport, true);
         if (result.isSuccess()) {
             src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.spawnother.success.source", target.getName(), world.getWorldName()));

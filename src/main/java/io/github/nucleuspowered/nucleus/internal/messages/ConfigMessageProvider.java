@@ -16,12 +16,8 @@ public class ConfigMessageProvider extends ResourceMessageProvider {
 
     private final MessageConfig mc;
 
-    public ConfigMessageProvider(Path file, String fallbackResource) throws Exception {
-        this(file, fallbackResource, Locale.getDefault());
-    }
-
     public ConfigMessageProvider(Path file, String fallbackResource, String locale) throws Exception {
-        this(file, fallbackResource, Locale.forLanguageTag(locale));
+        this(file, fallbackResource, parseLocaleString(locale));
     }
 
     private ConfigMessageProvider(Path file, String fallbackResource, Locale locale) throws Exception {

@@ -69,8 +69,7 @@ public class TeleportAskAllHereCommand extends AbstractCommand<Player> {
             this.tpHandler.addAskQuestion(x.getUniqueId(), tp);
 
             x.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.tpahere.question", src.getName()));
-
-            x.sendMessage(this.tpHandler.getAcceptDenyMessage(src, tp));
+            this.tpHandler.getAcceptDenyMessage(src, tp).ifPresent(x::sendMessage);
         });
 
         src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.tpaall.success"));

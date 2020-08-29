@@ -37,8 +37,8 @@ public class KitSetFirstJoinCommand extends KitFallbackBase<CommandSource> {
 
     @Override
     public CommandResult executeCommand(final CommandSource player, CommandContext args, Cause cause) {
-        Kit kitInfo = args.<Kit>getOne(KIT_PARAMETER_KEY).get();
-        boolean b = args.<Boolean>getOne(NucleusParameters.Keys.BOOL).orElse(false);
+        Kit kitInfo = args.requireOne(KIT_PARAMETER_KEY);
+        boolean b = args.<Boolean>getOne(NucleusParameters.Keys.BOOL).orElse(kitInfo.isFirstJoinKit());
 
         // This Kit is a reference back to the version in list, so we don't need
         // to update it explicitly

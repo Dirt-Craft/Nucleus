@@ -5,9 +5,9 @@
 package io.github.nucleuspowered.nucleus.modules.staffchat;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.api.chat.NucleusChatChannel;
-import io.github.nucleuspowered.nucleus.api.service.NucleusUserPreferenceService;
 import io.github.nucleuspowered.nucleus.internal.text.NucleusTextTemplateImpl;
 import io.github.nucleuspowered.nucleus.internal.traits.InternalServiceManagerTrait;
 import io.github.nucleuspowered.nucleus.internal.traits.PermissionTrait;
@@ -25,42 +25,32 @@ import org.spongepowered.api.service.permission.SubjectReference;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageChannel;
 import org.spongepowered.api.text.channel.MessageReceiver;
+import org.spongepowered.api.text.channel.MutableMessageChannel;
 import org.spongepowered.api.text.chat.ChatType;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class StaffChatMessageChannel
+public abstract class StaffChatMessageChannel
         implements NucleusChatChannel.StaffChat, PermissionTrait, InternalServiceManagerTrait {
 
-    private static StaffChatMessageChannel INSTANCE = null;
-
-    private boolean formatting = false;
+    private static boolean formatting = false;
+    private static NucleusTextTemplateImpl template;
+    private static TextColor colour;
 
     public static StaffChatMessageChannel getInstance() {
-        Preconditions.checkState(INSTANCE != null, "StaffChatMessageChannel#Instance");
-        return INSTANCE;
-    }
-
-    private final String basePerm;
-    private NucleusTextTemplateImpl template;
-    private TextColor colour;
-
-    StaffChatMessageChannel() {
-        Nucleus.getNucleus().registerReloadable(this::onReload);
-        this.onReload();
-        this.basePerm = Nucleus.getNucleus().getPermissionRegistry().getPermissionsForNucleusCommand(StaffChatCommand.class).getBase();
-        INSTANCE = this;
+        Preconditions.checkState(ImmutableStaffChatMessageChannel.INSTANCE != null, "StaffChatMessageChannel#Instance");
+        return ImmutableStaffChatMessageChannel.INSTANCE;
     }
 
     @Override
@@ -76,43 +66,100 @@ public class StaffChatMessageChannel
             source = (CommandSource) sender;
         }
 
-        Text prefix = this.template.getForCommandSource(source);
-        NucleusChatChannel.StaffChat.super.send(sender, Text.of(prefix, this.colour, original), type);
+        NucleusChatChannel.StaffChat.super.send(sender, format(source, Sponge.getServer().getConsole(), original), type);
     }
 
     @Override
-    @Nonnull
-    public Collection<MessageReceiver> getMembers() {
-        List<MessageReceiver> c =
-                Sponge.getServer().getOnlinePlayers().stream()
-                        .filter(this::test)
-                        .collect(Collectors.toList());
-        c.add(Sponge.getServer().getConsole());
-        return c;
+    public Text format(CommandSource sender, MessageReceiver receiver, Text text) {
+        return Text.of(template.getForCommandSource(sender), colour, text);
     }
 
     @Override
     public boolean formatMessages() {
-        return this.formatting;
+        return formatting;
     }
 
-    private boolean test(Player player) {
-        if (hasPermission(player, this.basePerm)) {
-            return getServiceUnchecked(UserPreferenceService.class)
-                    .getPreferenceFor(player, StaffChatUserPrefKeys.VIEW_STAFF_CHAT)
-                    .orElse(true);
-        }
-
-        return false;
-    }
-
-    private void onReload() {
+    private static void onReload() {
         Nucleus.getNucleus().getConfigAdapter(StaffChatModule.ID, StaffChatConfigAdapter.class)
                 .ifPresent(x -> {
-                    this.formatting = x.getNodeOrDefault().isIncludeStandardChatFormatting();
-                    this.template = x.getNodeOrDefault().getMessageTemplate();
-                    this.colour = x.getNodeOrDefault().getColour();
+                    formatting = x.getNodeOrDefault().isIncludeStandardChatFormatting();
+                    template = x.getNodeOrDefault().getMessageTemplate();
+                    colour = x.getNodeOrDefault().getColour();
                 });
+    }
+
+    public static class ImmutableStaffChatMessageChannel extends StaffChatMessageChannel {
+
+        private static StaffChatMessageChannel INSTANCE = new ImmutableStaffChatMessageChannel();
+
+        private final String basePerm;
+
+        private ImmutableStaffChatMessageChannel() {
+            Nucleus.getNucleus().registerReloadable(StaffChatMessageChannel::onReload);
+            onReload();
+            this.basePerm = Nucleus.getNucleus().getPermissionRegistry().getPermissionsForNucleusCommand(StaffChatCommand.class).getBase();
+        }
+
+        @Override
+        @Nonnull
+        public Collection<MessageReceiver> getMembers() {
+            List<MessageReceiver> c =
+                    Sponge.getServer().getOnlinePlayers().stream()
+                            .filter(this::test)
+                            .collect(Collectors.toList());
+            c.add(Sponge.getServer().getConsole());
+            return c;
+        }
+
+        @Override
+        public MutableMessageChannel asMutable() {
+            return new MutableStaffChatMessageChannel(getMembers());
+        }
+
+        private boolean test(Player player) {
+            if (hasPermission(player, this.basePerm)) {
+                return getServiceUnchecked(UserPreferenceService.class)
+                        .getPreferenceFor(player, StaffChatUserPrefKeys.VIEW_STAFF_CHAT)
+                        .orElse(true);
+            }
+
+            return false;
+        }
+
+    }
+
+    public static class MutableStaffChatMessageChannel extends StaffChatMessageChannel implements MutableMessageChannel {
+
+        private final List<MessageReceiver> messageReceivers = new ArrayList<>();
+
+        MutableStaffChatMessageChannel(Collection<MessageReceiver> receivers) {
+            this.messageReceivers.addAll(receivers);
+        }
+
+        @Override
+        public Collection<MessageReceiver> getMembers() {
+            return ImmutableList.copyOf(this.messageReceivers);
+        }
+
+        @Override
+        public boolean addMember(MessageReceiver member) {
+            return this.messageReceivers.add(member);
+        }
+
+        @Override
+        public boolean removeMember(MessageReceiver member) {
+            return this.messageReceivers.remove(member);
+        }
+
+        @Override
+        public void clearMembers() {
+            this.messageReceivers.clear();
+        }
+
+        @Override
+        public MutableMessageChannel asMutable() {
+            return this;
+        }
     }
 
     @NonnullByDefault

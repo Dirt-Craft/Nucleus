@@ -166,8 +166,7 @@ public class CoreListener implements Reloadable, ListenerBase {
         }
     }
 
-    @Listener(beforeModifications = true)
-    @SuppressWarnings("ConstantConditionalExpression")
+    @Listener(order = Order.LAST)
     public void onPlayerQuit(final ClientConnectionEvent.Disconnect event, @Getter("getTargetEntity") final Player player) {
         // There is an issue in Sponge where the connection may not even exist, because they were disconnected before the connection was
         // completely established.

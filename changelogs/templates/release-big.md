@@ -10,4 +10,4 @@ If you're having trouble, visit our Discord channel: https://discord.gg/A9QHG5H
 
 ## Known Issues
 
-* Sometimes, an incorrect custom prefix might be selected. Nucleus uses whatever the permission plugin hands back, check your inheritance with the permissions plugin.
+* Some plugins and mods are known to be incompatible with Nucleus. See https://nucleuspowered.org/docs/compatibility.html for more information.

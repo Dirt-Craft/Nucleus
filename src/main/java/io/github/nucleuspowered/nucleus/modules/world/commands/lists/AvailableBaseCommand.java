@@ -39,8 +39,7 @@ public abstract class AvailableBaseCommand extends AbstractCommand<CommandSource
                 .map(x -> mp.getTextMessageWithFormat("command.world.presets.item", x.getId(), x.getName()))
                 .collect(Collectors.toList());
 
-        Util.getPaginationBuilder(src)
-                .title(mp.getTextMessageWithTextFormat(this.titleKey))
+        Util.getPaginationBuilder(src).title(mp.getTextMessageWithTextFormat(this.titleKey))
                 .contents(types).sendTo(src);
 
         return CommandResult.success();

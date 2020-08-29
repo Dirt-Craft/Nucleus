@@ -14,12 +14,18 @@ import io.github.nucleuspowered.nucleus.modules.vanish.config.VanishConfig;
 import io.github.nucleuspowered.nucleus.modules.vanish.config.VanishConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.vanish.datamodules.VanishUserDataModule;
 import io.github.nucleuspowered.nucleus.modules.vanish.services.VanishService;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.text.action.TextActions;
+
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class VanishListener implements Reloadable, ListenerBase {
 
@@ -28,6 +34,26 @@ public class VanishListener implements Reloadable, ListenerBase {
 
     private final String permission = getPermissionHandlerFor(VanishCommand.class).getPermissionWithSuffix("persist");
     public static final String LOGIN_VANISH_PERMISSION = "nucleus.vanish.onlogin";
+
+    @Listener
+    public void onAuth(ClientConnectionEvent.Auth auth) {
+        if (this.vanishConfig.isTryHidePlayers()) {
+            UUID uuid = auth.getProfile().getUniqueId();
+            CompletableFuture<Void> future = new CompletableFuture<>();
+            Task.builder().execute(
+                    () -> {
+                        Sponge.getServiceManager()
+                                .provideUnchecked(UserStorageService.class)
+                                .get(uuid)
+                                .map(x -> x.get(Keys.LAST_DATE_PLAYED))
+                                .ifPresent(x -> x.ifPresent(y -> this.service.setLastVanishedTime(uuid, y)));
+                        future.complete(null);
+                    }
+            ).submit(Nucleus.getNucleus());
+
+            future.join();
+        }
+    }
 
     @Listener
     public void onLogin(ClientConnectionEvent.Join event, @Getter("getTargetEntity") Player player) {
@@ -54,6 +80,9 @@ public class VanishListener implements Reloadable, ListenerBase {
                 player.sendMessage(getMessageFor(player, "vanish.onlogin.prefs").toBuilder()
                         .onClick(TextActions.runCommand("/nuserprefs vanish-on-login false")).build());
             }
+        } else if (this.vanishConfig.isForceNucleusVanish()) {
+            // unvanish
+            this.service.unvanishPlayer(player);
         }
     }
 
@@ -65,6 +94,8 @@ public class VanishListener implements Reloadable, ListenerBase {
                 event.setMessageCancelled(true);
             }
         }
+
+        this.service.clearLastVanishTime(player.getUniqueId());
     }
 
     @Override

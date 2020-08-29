@@ -17,11 +17,32 @@ public class VanishConfig {
     @Setting(value = "alter-tab-list", comment = "config.vanish.altertablist")
     private boolean alterTabList = false;
 
+    @Setting(value = "force-nucleus-vanish", comment = "config.vanish.force")
+    private boolean forceNucleusVanish = true;
+
+    @Setting(value = "workaround-sponge-vanish-issue", comment = "config.vanish.sponge")
+    private boolean attemptSpongeWorkaroundVanish = true;
+
+    @Setting(value = "try-hide-players-in-seen", comment = "config.vanish.hideseen")
+    private boolean tryHidePlayers = true;
+
     public boolean isSuppressMessagesOnVanish() {
         return this.suppressMessagesOnVanish;
     }
 
     public boolean isAlterTabList() {
         return this.alterTabList;
+    }
+
+    public boolean isForceNucleusVanish() {
+        return this.forceNucleusVanish;
+    }
+
+    public boolean isAttemptSpongeWorkaroundVanish() {
+        return this.attemptSpongeWorkaroundVanish;
+    }
+
+    public boolean isTryHidePlayers() {
+        return this.tryHidePlayers;
     }
 }

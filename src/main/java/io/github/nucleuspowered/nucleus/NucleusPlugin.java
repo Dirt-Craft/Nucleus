@@ -53,6 +53,7 @@ import io.github.nucleuspowered.nucleus.internal.qsml.QuickStartModuleConstructo
 import io.github.nucleuspowered.nucleus.internal.qsml.event.BaseModuleEvent;
 import io.github.nucleuspowered.nucleus.internal.services.CommandRemapperService;
 import io.github.nucleuspowered.nucleus.internal.services.PermissionResolver;
+import io.github.nucleuspowered.nucleus.internal.services.PlayerOnlineService;
 import io.github.nucleuspowered.nucleus.internal.services.WarmupManager;
 import io.github.nucleuspowered.nucleus.internal.teleport.NucleusTeleportHandler;
 import io.github.nucleuspowered.nucleus.internal.text.NucleusTokenServiceImpl;
@@ -108,6 +109,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -340,6 +342,7 @@ public class NucleusPlugin extends Nucleus {
         this.serviceManager.registerService(NucleusTokenServiceImpl.class, this.nucleusChatService);
         Sponge.getServiceManager().setProvider(this, NucleusMessageTokenService.class, this.nucleusChatService);
         this.serviceManager.registerService(CommandRemapperService.class, new CommandRemapperService());
+        this.serviceManager.registerService(PlayerOnlineService.class, PlayerOnlineService.DEFAULT);
 
         try {
             final String he = this.messageProvider.getMessageWithFormat("config.main-header", PluginInfo.VERSION);
@@ -489,7 +492,7 @@ public class NucleusPlugin extends Nucleus {
             try {
                 this.logger.info(this.messageProvider.getMessageWithFormat("startup.loaddata", PluginInfo.NAME));
                 allChange();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 this.isErrored = e;
                 disable();
                 e.printStackTrace();
@@ -497,7 +500,7 @@ public class NucleusPlugin extends Nucleus {
         }
     }
 
-    private void allChange() throws IOException {
+    private void allChange() throws Exception {
         resetDataPath(true);
         this.generalService.changeFile();
         this.kitService.changeFile();
@@ -506,6 +509,8 @@ public class NucleusPlugin extends Nucleus {
 
         this.userCacheService.load();
         this.nameBanService.load();
+        this.generalService.loadInternal();
+        this.kitService.loadInternal();
     }
 
     @Listener
@@ -529,7 +534,7 @@ public class NucleusPlugin extends Nucleus {
         }
     }
 
-    @Listener
+    @Listener(order = Order.PRE)
     public void onGameStarted(GameStartedServerEvent event) {
         if (this.isErrored == null) {
             this.generalService.getTransient(UniqueUserCountTransientModule.class).resetUniqueUserCount();
@@ -749,6 +754,10 @@ public class NucleusPlugin extends Nucleus {
         String language = config.getServerLocale();
         if (language == null) {
             language = "default";
+        }
+
+        if (!config.isAutodetectlanguage() && language.equalsIgnoreCase("default")) {
+            language = Locale.UK.toLanguageTag();
         }
 
         if (config.isCustommessages()) {

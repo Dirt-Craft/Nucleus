@@ -8,21 +8,27 @@ import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.interfaces.ServiceBase;
 import io.github.nucleuspowered.nucleus.internal.traits.PermissionTrait;
-import io.github.nucleuspowered.nucleus.modules.vanish.commands.VanishCommand;
+import io.github.nucleuspowered.nucleus.modules.vanish.VanishModule;
 import io.github.nucleuspowered.nucleus.modules.vanish.config.VanishConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.vanish.datamodules.VanishUserDataModule;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.entity.living.player.tab.TabListEntry;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 public class VanishService implements Reloadable, PermissionTrait, ServiceBase {
 
-    private final String canseePerm = Nucleus.getNucleus().getPermissionRegistry()
-            .getPermissionsForNucleusCommand(VanishCommand.class).getPermissionWithSuffix("see");
     private boolean isAlter = false;
+    private final Map<UUID, Instant> lastVanish = new HashMap<>();
 
     @Override
     public void onReload() {
@@ -31,27 +37,27 @@ public class VanishService implements Reloadable, PermissionTrait, ServiceBase {
             Nucleus.getNucleus().getInternalServiceManager().getServiceUnchecked(VanishConfigAdapter.class).getNodeOrDefault().isAlterTabList();
     }
 
-    public boolean isVanished(Player player) {
+    public boolean isVanished(User player) {
         return Nucleus.getNucleus().getUserDataManager().getUnchecked(player).get(VanishUserDataModule.class).isVanished();
     }
 
-
-    public void vanishPlayer(Player player) {
+    public void vanishPlayer(User player) {
         vanishPlayer(player, false);
     }
 
-    public void vanishPlayer(Player player, boolean delay) {
+    public void vanishPlayer(User player, boolean delay) {
         VanishUserDataModule service = Nucleus.getNucleus().getUserDataManager().getUnchecked(player).get(VanishUserDataModule.class);
         service.setVanished(true);
 
         if (delay) {
             Task.builder().execute(() -> vanishPlayerInternal(player)).delayTicks(0).name("Nucleus Vanish runnable").submit(Nucleus.getNucleus());
         } else {
+            this.lastVanish.put(player.getUniqueId(), Instant.now());
             vanishPlayerInternal(player);
         }
     }
 
-    private void vanishPlayerInternal(Player player) {
+    private void vanishPlayerInternal(User player) {
         VanishUserDataModule service = Nucleus.getNucleus().getUserDataManager().getUnchecked(player).get(VanishUserDataModule.class);
         if (service.isVanished()) {
             player.offer(Keys.VANISH, true);
@@ -59,20 +65,21 @@ public class VanishService implements Reloadable, PermissionTrait, ServiceBase {
             player.offer(Keys.VANISH_PREVENTS_TARGETING, true);
 
             if (this.isAlter) {
-                Sponge.getServer().getOnlinePlayers().stream().filter(x -> !player.equals(x) || !hasPermission(x, this.canseePerm))
+                Sponge.getServer().getOnlinePlayers().stream().filter(x -> !player.equals(x) || !hasPermission(x, VanishModule.CAN_SEE_PERMISSION))
                         .forEach(x -> x.getTabList().removeEntry(player.getUniqueId()));
             }
         }
     }
 
-    public void unvanishPlayer(Player player) {
-        VanishUserDataModule service = Nucleus.getNucleus().getUserDataManager().getUnchecked(player).get(VanishUserDataModule.class);
+    public void unvanishPlayer(User user) {
+        VanishUserDataModule service = Nucleus.getNucleus().getUserDataManager().getUnchecked(user).get(VanishUserDataModule.class);
         service.setVanished(false);
-        player.offer(Keys.VANISH, false);
-        player.offer(Keys.VANISH_IGNORES_COLLISION, false);
-        player.offer(Keys.VANISH_PREVENTS_TARGETING, false);
+        user.offer(Keys.VANISH, false);
+        user.offer(Keys.VANISH_IGNORES_COLLISION, false);
+        user.offer(Keys.VANISH_PREVENTS_TARGETING, false);
 
-        if (this.isAlter) {
+        if (this.isAlter && user instanceof Player) {
+            Player player = (Player) user;
             Sponge.getServer().getOnlinePlayers().forEach(x -> {
                 if (!x.getTabList().getEntry(player.getUniqueId()).isPresent()) {
                     x.getTabList().addEntry(TabListEntry.builder()
@@ -84,6 +91,18 @@ public class VanishService implements Reloadable, PermissionTrait, ServiceBase {
                 }
             });
         }
+    }
+
+    public void setLastVanishedTime(UUID pl, Instant instant) {
+        this.lastVanish.put(pl, instant);
+    }
+
+    Optional<Instant> getLastVanishTime(UUID pl) {
+        return Optional.ofNullable(this.lastVanish.get(pl));
+    }
+
+    public void clearLastVanishTime(UUID pl) {
+        this.lastVanish.remove(pl);
     }
 
 }

@@ -95,7 +95,7 @@ public class TeleportAskHereCommand extends AbstractCommand<Player> {
         TeleportHandler.TeleportPrep tp = new TeleportHandler.TeleportPrep(Instant.now().plus(30, ChronoUnit.SECONDS), src, cost, tb);
         this.tpHandler.addAskQuestion(target.getUniqueId(), tp);
         target.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.tpahere.question", src.getName()));
-        target.sendMessage(this.tpHandler.getAcceptDenyMessage(src, tp));
+        this.tpHandler.getAcceptDenyMessage(src, tp).ifPresent(target::sendMessage);
 
         src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.tpask.sent", target.getName()));
         return CommandResult.success();

@@ -56,10 +56,10 @@ public class MessageCommand extends AbstractCommand<CommandSource> {
     @Override
     public CommandElement[] getArguments() {
         return new CommandElement[] {
-            GenericArguments.firstParsing(
+            GenericArguments.onlyOne(GenericArguments.firstParsing(
                     new MessageTargetArgument(Text.of(TO)),
                     new SelectorArgument(new NicknameArgument(Text.of(TO), NicknameArgument.Target.PLAYER_CONSOLE), Player.class)
-            ),
+            )),
             NucleusParameters.MESSAGE
         };
     }

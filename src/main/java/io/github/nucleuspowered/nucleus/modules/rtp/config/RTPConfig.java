@@ -169,7 +169,7 @@ public class RTPConfig {
         private int radius = 30000;
 
         @Setting(value = "min-radius")
-        private int minRadius = 30000;
+        private int minRadius = 0;
 
         @Setting(value = "minimum-y")
         private int minY = 0;

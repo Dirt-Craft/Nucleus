@@ -16,6 +16,9 @@ public class PlayerInfoConfig {
     @Setting
     private SeenConfig seen = new SeenConfig();
 
+    @Setting
+    private NearConfig near = new NearConfig();
+
     public ListConfig getList() {
         return this.list;
     }
@@ -23,4 +26,9 @@ public class PlayerInfoConfig {
     public SeenConfig getSeen() {
         return this.seen;
     }
+
+    public NearConfig getNear() {
+        return this.near;
+    }
+
 }

@@ -27,6 +27,15 @@ import java.util.stream.Collectors;
 
 public abstract class MessageProvider {
 
+    static Locale parseLocaleString(String string) {
+        if (string.contains("-") || string.contains("_")) {
+            String[] s = string.split("[-_]", 2);
+            return new Locale(s[0], s[1]);
+        }
+
+        return Locale.forLanguageTag(string);
+    }
+
     private final static Pattern STRING_REPLACER = Pattern.compile("\\{+[^0-9]+}+");
     public abstract Locale getLocale();
 

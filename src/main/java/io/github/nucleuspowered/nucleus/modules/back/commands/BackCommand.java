@@ -11,9 +11,11 @@ import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCom
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
 import io.github.nucleuspowered.nucleus.internal.command.ReturnMessageException;
 import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEquivalent;
+import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.internal.teleport.NucleusTeleportHandler;
+import io.github.nucleuspowered.nucleus.modules.back.config.BackConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.back.listeners.BackListeners;
 import io.github.nucleuspowered.nucleus.modules.back.services.BackHandler;
 import org.spongepowered.api.command.CommandResult;
@@ -33,9 +35,11 @@ import java.util.Optional;
 @RegisterCommand({"back", "return"})
 @EssentialsEquivalent({"back", "return"})
 @NonnullByDefault
-public class BackCommand extends AbstractCommand<Player> {
+public class BackCommand extends AbstractCommand<Player> implements Reloadable {
 
     private final BackHandler handler = Nucleus.getNucleus().getInternalServiceManager().getServiceUnchecked(BackHandler.class);
+    private boolean sameDimensionCheck = false;
+    private final String EXEMPT_PERMISSION = this.permissions.getPermissionWithSuffix(BackListeners.SAME_DIMENSION);
 
     @Override
     public CommandElement[] getArguments() {
@@ -53,20 +57,25 @@ public class BackCommand extends AbstractCommand<Player> {
         m.put(BackListeners.ON_DEATH, PermissionInformation.getWithTranslation("permission.back.ondeath", SuggestedLevel.USER));
         m.put(BackListeners.ON_TELEPORT, PermissionInformation.getWithTranslation("permission.back.onteleport", SuggestedLevel.USER));
         m.put(BackListeners.ON_PORTAL, PermissionInformation.getWithTranslation("permission.back.onportal", SuggestedLevel.USER));
+        m.put(BackListeners.SAME_DIMENSION, PermissionInformation.getWithTranslation("permission.back.exempt.samedimension", SuggestedLevel.MOD));
         m.put("exempt.bordercheck", PermissionInformation.getWithTranslation("permission.tppos.border", SuggestedLevel.ADMIN));
         return m;
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public CommandResult executeCommand(Player src, CommandContext args, Cause cause) throws Exception {
         Optional<Transform<World>> ol = this.handler.getLastLocation(src);
         if (!ol.isPresent()) {
-            src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.back.noloc"));
-            return CommandResult.empty();
+            throw ReturnMessageException.fromKey(src, "command.back.noloc");
         }
 
         Transform<World> loc = ol.get();
+        if (this.sameDimensionCheck && src.getWorld().getUniqueId() != loc.getExtent().getUniqueId()) {
+            if (!hasPermission(src, EXEMPT_PERMISSION)) {
+                throw ReturnMessageException.fromKey(src, "command.back.sameworld");
+            }
+        }
+
         NucleusTeleportHandler.TeleportResult result =
                 Nucleus.getNucleus().getTeleportHandler()
                     .teleportPlayer(src, loc, !args.hasAny("f"), !args.hasAny("b"));
@@ -78,5 +87,10 @@ public class BackCommand extends AbstractCommand<Player> {
         }
 
         throw ReturnMessageException.fromKey("command.back.cancelled");
+    }
+
+    @Override
+    public void onReload() throws Exception {
+        this.sameDimensionCheck = getServiceUnchecked(BackConfigAdapter.class).getNodeOrDefault().isOnlySameDimension();
     }
 }

@@ -68,7 +68,8 @@ import java.util.zip.GZIPOutputStream;
 
 public class Util {
 
-    private Util() { }
+    private Util() {
+    }
 
     public static final DateTimeFormatter FULL_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL)
             .withZone(ZoneId.systemDefault());
@@ -87,16 +88,16 @@ public class Util {
         return applyChatTemplate(formatter.getHeader(), formatter.getBody(), formatter.getFooter());
     }
 
+    public static Text format(String unformattedString) {
+        return TextSerializers.FORMATTING_CODE.deserialize(unformattedString);
+    }
+
     public static Text applyChatTemplate(TextRepresentable header, TextRepresentable body, TextRepresentable footer) {
         return CHAT_TEMPLATE.apply(
                 ImmutableMap.of(
                 MessageEvent.PARAM_MESSAGE_HEADER, header,
                 MessageEvent.PARAM_MESSAGE_BODY, body,
                 MessageEvent.PARAM_MESSAGE_FOOTER, footer)).build();
-    }
-
-    public static Text format(String unformattedString) {
-        return TextSerializers.FORMATTING_CODE.deserialize(unformattedString);
     }
 
     public static UUID getUUID(CommandSource src) {

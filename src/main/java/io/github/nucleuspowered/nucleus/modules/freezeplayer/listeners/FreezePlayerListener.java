@@ -6,26 +6,26 @@ package io.github.nucleuspowered.nucleus.modules.freezeplayer.listeners;
 
 import com.google.common.collect.Maps;
 import io.github.nucleuspowered.nucleus.Nucleus;
-import io.github.nucleuspowered.nucleus.dataservices.loaders.UserDataManager;
-import io.github.nucleuspowered.nucleus.dataservices.modular.ModularUserService;
 import io.github.nucleuspowered.nucleus.internal.interfaces.ListenerBase;
-import io.github.nucleuspowered.nucleus.modules.freezeplayer.datamodules.FreezePlayerUserDataModule;
+import io.github.nucleuspowered.nucleus.modules.freezeplayer.services.FreezePlayerService;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.filter.cause.Root;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 public class FreezePlayerListener implements ListenerBase {
 
-    private final UserDataManager userDataManager = Nucleus.getNucleus().getUserDataManager();
+    private final FreezePlayerService service = Nucleus.getNucleus()
+            .getInternalServiceManager()
+            .getServiceUnchecked(FreezePlayerService.class);
     private final Map<UUID, Instant> lastFreezeNotification = Maps.newHashMap();
 
     @Listener
@@ -43,9 +43,13 @@ public class FreezePlayerListener implements ListenerBase {
         event.setCancelled(checkForFrozen(player, "freeze.cancelinteractblock"));
     }
 
+    @Listener
+    public void onPlayerDisconnect(ClientConnectionEvent.Disconnect event) {
+        this.service.invalidate(event.getTargetEntity().getUniqueId());
+    }
+
     private boolean checkForFrozen(Player player, String message) {
-        Optional<ModularUserService> userService = this.userDataManager.get(player);
-        if (userService.map(x -> x.get(FreezePlayerUserDataModule.class).isFrozen()).orElse(false)) {
+        if (this.service.isFrozen(player)) {
             Instant now = Instant.now();
             if (this.lastFreezeNotification.getOrDefault(player.getUniqueId(), now).isBefore(now)) {
                 player.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat(message));

@@ -7,6 +7,7 @@ package io.github.nucleuspowered.nucleus.modules.spawn.listeners;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Maps;
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.EventContexts;
 import io.github.nucleuspowered.nucleus.internal.PermissionRegistry;
 import io.github.nucleuspowered.nucleus.internal.interfaces.ListenerBase;
 import io.github.nucleuspowered.nucleus.internal.interfaces.Reloadable;
@@ -20,12 +21,15 @@ import io.github.nucleuspowered.nucleus.modules.spawn.config.SpawnConfig;
 import io.github.nucleuspowered.nucleus.modules.spawn.config.SpawnConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.spawn.datamodules.SpawnGeneralDataModule;
 import io.github.nucleuspowered.nucleus.modules.spawn.datamodules.SpawnWorldDataModule;
+import io.github.nucleuspowered.nucleus.modules.spawn.events.SendToSpawnEvent;
+import io.github.nucleuspowered.nucleus.util.CauseStackHelper;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
+import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
@@ -134,15 +138,15 @@ public class SpawnListener implements Reloadable, ListenerBase, MessageProviderT
             Transform<World> to = event.getToTransform();
             if (to.getLocation().getBlockPosition().equals(to.getExtent().getSpawnLocation().getBlockPosition())) {
                 Nucleus.getNucleus().getWorldDataManager()
-                        .getWorld(to.getExtent()).ifPresent(x -> x.get(SpawnWorldDataModule.class).getSpawnRotation()
-                        .ifPresent(y -> event.setToTransform(to.setRotation(y))));
+                        .getWorld(to.getExtent()).flatMap(x -> x.get(SpawnWorldDataModule.class).getSpawnRotation())
+                        .ifPresent(y -> event.setToTransform(to.setRotation(y)));
             }
         }
     }
 
     @Listener(order = Order.EARLY)
     public void onRespawn(RespawnPlayerEvent event) {
-        if (event.isBedSpawn() && !this.spawnConfig.isRedirectBedSpawn()) {
+        if (!this.spawnConfig.isHandleOnRespawn() || (event.isBedSpawn() && !this.spawnConfig.isRedirectBedSpawn())) {
             // Nope, we don't care.
             return;
         }
@@ -161,9 +165,30 @@ public class SpawnListener implements Reloadable, ListenerBase, MessageProviderT
         Location<World> spawn = world.getSpawnLocation().add(0.5, 0, 0.5);
         Transform<World> to = new Transform<>(spawn);
 
-        // Compare current transform to spawn - set rotation.
-        Nucleus.getNucleus().getWorldDataManager().getWorld(world).ifPresent(x -> x.get(SpawnWorldDataModule.class).getSpawnRotation()
-            .ifPresent(y -> event.setToTransform(to.setRotation(y))));
+        EventContext context = EventContext.builder().add(EventContexts.SPAWN_EVENT_TYPE,SendToSpawnEvent.Type.DEATH).build();
+        SendToSpawnEvent sEvent = new SendToSpawnEvent(to, event.getTargetEntity(), CauseStackHelper.createCause(context, event.getTargetEntity()));
+        if (Sponge.getEventManager().post(sEvent)) {
+            if (sEvent.getCancelReason().isPresent()) {
+                event.getTargetEntity().sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.spawnother.self.failed.reason", sEvent.getCancelReason().get()));
+                return;
+            }
+
+            event.getTargetEntity().sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.spawnother.self.failed.noreason"));
+            return;
+        }
+
+        if (sEvent.isRedirected()) {
+            to = sEvent.getTransformTo();
+        } else {
+            // Compare current transform to spawn - set rotation.
+            Optional<Vector3d> rotation = Nucleus.getNucleus().getWorldDataManager().getWorld(world)
+                    .flatMap(x -> x.get(SpawnWorldDataModule.class).getSpawnRotation());
+            if (rotation.isPresent()) {
+                to = to.setRotation(rotation.get());
+            }
+        }
+
+        event.setToTransform(to);
     }
 
     @Override public void onReload() {

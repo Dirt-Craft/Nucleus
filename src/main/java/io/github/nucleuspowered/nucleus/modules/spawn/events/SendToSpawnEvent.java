@@ -19,7 +19,8 @@ import javax.annotation.Nullable;
 @NonnullByDefault
 public class SendToSpawnEvent extends AbstractEvent implements NucleusSendToSpawnEvent {
 
-    private final Transform<World> transform;
+    private Transform<World> transform;
+    private final Transform<World> originalTransform;
     private final User targetUser;
     private final Cause cause;
 
@@ -29,14 +30,25 @@ public class SendToSpawnEvent extends AbstractEvent implements NucleusSendToSpaw
 
     public SendToSpawnEvent(Transform<World> transform, User targetUser, Cause cause) {
         this.transform = transform;
+        this.originalTransform = transform;
         this.targetUser = targetUser;
         this.cause = cause;
     }
 
     @Override public Transform<World> getTransformTo() {
-        // Copy!
-        return new Transform<>(this.transform.getExtent(), this.transform.getPosition(), this.transform.getRotation());
+        return this.transform;
     }
+
+    @Override public Transform<World> getOriginalTransformTo() {
+        // Copy!
+        return this.originalTransform;
+    }
+
+    @Override public void setTransformTo(Transform<World> transform) {
+        this.transform = transform;
+    }
+
+    public boolean isRedirected() { return this.transform != this.originalTransform; }
 
     @Override public void setCancelReason(String reason) {
         this.cancelReason = reason;

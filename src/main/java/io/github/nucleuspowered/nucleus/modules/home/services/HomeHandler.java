@@ -126,7 +126,9 @@ public class HomeHandler implements NucleusHomeService, PermissionTrait, Service
             return Integer.MAX_VALUE;
         }
 
-        return Math.max(Util.getPositiveIntOptionFromSubject(src, "home-count", "homes").orElse(1), 1);
+        //noinspection deprecation
+        return Math.max(Util.getPositiveIntOptionFromSubject(src, NucleusHomeService.HOME_COUNT_OPTION, NucleusHomeService.ALTERNATIVE_HOME_COUNT_OPTION)
+                .orElse(1), 1);
     }
 
     private void postEvent(AbstractHomeEvent event) throws NucleusException {

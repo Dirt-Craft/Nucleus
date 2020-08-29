@@ -25,6 +25,15 @@ public class TeleportConfig {
     @Setting(value = "start-cooldown-when-asking", comment = "config.teleport.cooldownOnAsk")
     private boolean cooldownOnAsk = false;
 
+    @Setting(value = "show-clickable-tpa-accept-deny", comment = "config.teleport.clickableAcceptDeny")
+    private boolean showClickableAcceptDeny = true;
+
+    @Setting(value = "use-commands-when-clicking-tpa-accept-deny", comment = "config.teleport.useCommandOnClick")
+    private boolean useCommandOnClickAcceptOrDeny = false;
+
+    @Setting(value = "use-request-location-on-tp-requests", comment = "config.teleport.useRequestLocation")
+    private boolean useRequestLocation = false;
+
     public boolean isDefaultQuiet() {
         return this.defaultQuiet;
     }
@@ -43,5 +52,17 @@ public class TeleportConfig {
 
     public boolean isCooldownOnAsk() {
         return cooldownOnAsk;
+    }
+
+    public boolean isUseCommandsOnClickAcceptOrDeny() {
+        return this.useCommandOnClickAcceptOrDeny;
+    }
+
+    public boolean isShowClickableAcceptDeny() {
+        return this.showClickableAcceptDeny;
+    }
+
+    public boolean isUseRequestLocation() {
+        return this.useRequestLocation;
     }
 }

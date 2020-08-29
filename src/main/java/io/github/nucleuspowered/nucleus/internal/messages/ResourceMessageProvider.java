@@ -26,7 +26,7 @@ public class ResourceMessageProvider extends MessageProvider {
     }
 
     public ResourceMessageProvider(String resource, String locale) {
-        this(resource, Locale.forLanguageTag(locale));
+        this(resource, parseLocaleString(locale));
     }
 
     ResourceMessageProvider(String resource, Locale locale) {

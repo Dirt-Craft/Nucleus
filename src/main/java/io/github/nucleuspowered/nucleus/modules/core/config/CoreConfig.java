@@ -70,6 +70,9 @@ public class CoreConfig {
     @Setting(value = "more-accurate-visitor-count", comment = "config.core.accurate")
     private boolean moreAccurate = false;
 
+    @Setting(value = "attempt-lanugage-autodetect", comment = "config.core.autodetectlang")
+    private boolean autodetectlanguage = true;
+
     @Setting(value = "override-language", comment = "config.core.language")
     private String serverLocale = "default";
 
@@ -178,5 +181,9 @@ public class CoreConfig {
 
     public boolean isPrintWhenPermissionIsntRegistered() {
         return this.printWhenPermissionIsntRegistered;
+    }
+
+    public boolean isAutodetectlanguage() {
+        return this.autodetectlanguage;
     }
 }

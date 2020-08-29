@@ -71,7 +71,12 @@ public class VanishCommand extends AbstractCommand<CommandSource> {
         }
 
         VanishUserDataModule uss = Nucleus.getNucleus().getUserDataManager().getUnchecked(ou).get(VanishUserDataModule.class);
-        uss.setVanished(args.<Boolean>getOne(this.b).orElse(!uss.isVanished()));
+        boolean toVanish = args.<Boolean>getOne(this.b).orElse(!uss.isVanished());
+        if (toVanish) {
+            getServiceUnchecked(VanishService.class).vanishPlayer(ou);
+        } else {
+            getServiceUnchecked(VanishService.class).unvanishPlayer(ou);
+        }
 
         src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.vanish.successuser",
             ou.getName(),

@@ -33,6 +33,23 @@ public interface NucleusHomeService {
     String DEFAULT_HOME_NAME = "home";
 
     /**
+     * The name of the permission option that will contain the number of homes a player
+     * may have.
+     */
+    String HOME_COUNT_OPTION = "home-count";
+
+    /**
+     * An alternative name that can be used instead of {@link #HOME_COUNT_OPTION}.
+     * Should only be used for reading, as an option named {@link #HOME_COUNT_OPTION}
+     * will supersede this.
+     *
+     * @deprecated Use {@link #HOME_COUNT_OPTION} as the permission option to set
+     * home counts, as that will override this one.
+     */
+    @Deprecated
+    String ALTERNATIVE_HOME_COUNT_OPTION = "homes";
+
+    /**
      * The pattern that all home names must follow.
      */
     Pattern HOME_NAME_PATTERN = Pattern.compile("^[a-zA-Z][a-zA-Z0-9]{1,15}$");

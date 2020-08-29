@@ -29,6 +29,7 @@ public class BackListeners implements Reloadable, ListenerBase {
     public static final String ON_TELEPORT = "targets.teleport";
     public static final String ON_DEATH = "targets.death";
     public static final String ON_PORTAL = "targets.portal";
+    public static final String SAME_DIMENSION = "exempt.samedimension";
 
     private final BackHandler handler = Nucleus.getNucleus().getInternalServiceManager().getServiceUnchecked(BackHandler.class);
     private BackConfig backConfig = new BackConfig();

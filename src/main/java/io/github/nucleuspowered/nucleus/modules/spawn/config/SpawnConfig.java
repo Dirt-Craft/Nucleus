@@ -23,6 +23,9 @@ public class SpawnConfig {
     @Setting(value = "force-first-spawn", comment = "config.spawn.forcefirstspawn")
     private boolean forceFirstSpawn = false;
 
+    @Setting(value = "handle-on-respawn", comment = "config.spawn.handleonrespawn")
+    private boolean handleOnRespawn = true;
+
     @Setting(value = "global-spawn", comment = "config.spawn.global.base")
     private GlobalSpawnConfig globalSpawn = new GlobalSpawnConfig();
 
@@ -61,5 +64,9 @@ public class SpawnConfig {
 
     public List<String> getOnLoginExemptWorlds() {
         return this.spawnOnLoginExemptWorld == null ? ImmutableList.of() : this.spawnOnLoginExemptWorld;
+    }
+
+    public boolean isHandleOnRespawn() {
+        return this.handleOnRespawn;
     }
 }

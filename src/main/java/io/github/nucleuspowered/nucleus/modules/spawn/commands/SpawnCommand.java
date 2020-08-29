@@ -5,6 +5,7 @@
 package io.github.nucleuspowered.nucleus.modules.spawn.commands;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
+import io.github.nucleuspowered.nucleus.api.EventContexts;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
@@ -25,9 +26,9 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
 import org.spongepowered.api.command.args.GenericArguments;
-import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.annotation.NonnullByDefault;
 import org.spongepowered.api.world.World;
@@ -84,9 +85,8 @@ public class SpawnCommand extends AbstractCommand<Player> implements Reloadable 
                     Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.spawn.nopermsworld", ow.get().getName()));
         }
 
-        Transform<World> worldTransform = SpawnHelper.getSpawn(wp, src);
-
-        SendToSpawnEvent event = new SendToSpawnEvent(worldTransform, src, CauseStackHelper.createCause(src));
+        EventContext context = EventContext.builder().add(EventContexts.SPAWN_EVENT_TYPE, SendToSpawnEvent.Type.COMMAND).build();
+        SendToSpawnEvent event = new SendToSpawnEvent(SpawnHelper.getSpawn(ow.get().getProperties(), src), src, CauseStackHelper.createCause(context, src));
         if (Sponge.getEventManager().post(event)) {
             if (event.getCancelReason().isPresent()) {
                 throw new ReturnMessageException(
@@ -99,7 +99,7 @@ public class SpawnCommand extends AbstractCommand<Player> implements Reloadable 
         // If we don't have a rotation, then use the current rotation
         NucleusTeleportHandler.TeleportResult result = Nucleus.getNucleus().getTeleportHandler()
                 .teleportPlayer(src,
-                    SpawnHelper.getSpawn(ow.get().getProperties(), src),
+                    event.getTransformTo(),
                     !force && this.sc.isSafeTeleport(), true);
         if (result.isSuccess()) {
             src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.spawn.success", wp.getWorldName()));

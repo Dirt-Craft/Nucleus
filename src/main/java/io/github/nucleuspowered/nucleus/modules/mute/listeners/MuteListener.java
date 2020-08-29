@@ -62,7 +62,12 @@ public class MuteListener implements Reloadable, ListenerBase {
         }).submit(Nucleus.getNucleus());
     }
 
-    @Listener(order = Order.LATE)
+    /**
+     * Mutes should happen regardless.
+     *
+     * @param event The event
+     */
+    @Listener(order = Order.FIRST)
     public void onChat(MessageChannelEvent.Chat event) {
         Util.onPlayerSimulatedOrPlayer(event, this::onChat);
     }

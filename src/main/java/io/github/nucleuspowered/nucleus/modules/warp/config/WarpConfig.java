@@ -14,7 +14,7 @@ public class WarpConfig {
     private double defaultWarpCost = 0;
 
     @Setting(value = "separate-permissions", comment = "config.warps.separate")
-    private boolean separatePermissions = false;
+    private boolean separatePermissions = true;
 
     @Setting(value = "use-safe-warp", comment = "config.warps.safe")
     private boolean safeTeleport = true;

@@ -33,10 +33,10 @@ public class ExtinguishCommand extends AbstractCommand<CommandSource> {
     protected CommandResult executeCommand(CommandSource src, CommandContext args, Cause cause) throws Exception {
         Player target = this.getUserFromArgs(Player.class, src, NucleusParameters.Keys.PLAYER, args);
         if (target.get(Keys.FIRE_TICKS).orElse(-1) > 0 && target.offer(Keys.FIRE_TICKS, 0).isSuccessful()) {
-            sendMessageTo(src, "command.ext.success", target.getName());
+            sendMessageTo(src, "command.extinguish.success", target.getName());
             return CommandResult.success();
         }
 
-        throw ReturnMessageException.fromKey("command.ext.failed", target.getName());
+        throw ReturnMessageException.fromKey("command.extinguish.failed", target.getName());
     }
 }

@@ -10,6 +10,9 @@ import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 @ConfigSerializable
 public class BackConfig {
 
+    @Setting(value = "only-same-dimension", comment = "config.back.onlySameDimension")
+    private boolean onlySameDimension = false;
+
     @Setting(value = "on-death", comment = "config.back.ondeath")
     private boolean onDeath = true;
 
@@ -29,5 +32,9 @@ public class BackConfig {
 
     public boolean isOnPortal() {
         return this.onPortal;
+    }
+
+    public boolean isOnlySameDimension() {
+        return onlySameDimension;
     }
 }

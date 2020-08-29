@@ -16,6 +16,7 @@ import io.github.nucleuspowered.nucleus.internal.annotations.APIService;
 import io.github.nucleuspowered.nucleus.internal.annotations.RegisterCommandInterceptors;
 import io.github.nucleuspowered.nucleus.internal.annotations.RequireExistenceOf;
 import io.github.nucleuspowered.nucleus.internal.annotations.RequiresPlatform;
+import io.github.nucleuspowered.nucleus.internal.annotations.ReregisterService;
 import io.github.nucleuspowered.nucleus.internal.annotations.ServerOnly;
 import io.github.nucleuspowered.nucleus.internal.annotations.SkipOnError;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
@@ -163,7 +164,20 @@ public abstract class StandardModule implements Module, InternalServiceManagerTr
                 throw new IllegalStateException(error);
             }
         } else {
-            register(serviceClass, serviceImpl);
+            ReregisterService reregisterService = serviceClass.getAnnotation(ReregisterService.class);
+            if (reregisterService != null) {
+                Class<?> apiInterface = reregisterService.value();
+                if (apiInterface.isInstance(serviceImpl)) {
+                    // OK
+                    register((Class) apiInterface, serviceClass, serviceImpl, true);
+                } else {
+                    String error = "ERROR: " + apiInterface.getName() + " does not inherit from " + serviceClass.getName();
+                    Nucleus.getNucleus().getLogger().error(error);
+                    throw new IllegalStateException(error);
+                }
+            } else {
+                register(serviceClass, serviceImpl);
+            }
         }
 
         if (serviceImpl instanceof Reloadable) {
@@ -590,6 +604,11 @@ public abstract class StandardModule implements Module, InternalServiceManagerTr
 
     protected final <I, S extends I> void register(Class<S> impl, S object) {
         Nucleus.getNucleus().getInternalServiceManager().registerService(impl, object);
+    }
+
+    protected final <I, S extends I> void register(Class<I> internalApi, Class<S> impl, S object, boolean remap) {
+        register(impl, object);
+        Nucleus.getNucleus().getInternalServiceManager().registerService(internalApi, object, remap);
     }
 
     protected final <I, S extends I> void register(Class<I> api, Class<S> impl, S object) {

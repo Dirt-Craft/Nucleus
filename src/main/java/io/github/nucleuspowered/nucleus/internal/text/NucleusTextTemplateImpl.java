@@ -165,7 +165,7 @@ public abstract class NucleusTextTemplateImpl implements NucleusTextTemplate {
             int index = 0;
 
             while (mat.find()) {
-                if (mat.group("url") != null && mat.group("url2") != null) {
+                if (mat.group("url") != null && mat.group("urltwo") != null) {
                     String toUpdate = s.get(index);
                     toUpdate = toUpdate + mat.group();
                     if (s.size() < index + 1) {

@@ -97,7 +97,8 @@ public class MeCommand extends AbstractCommand<CommandSource> implements Reloada
         return CommandResult.success();
     }
 
-    @Override public void onReload() {
+    @Override
+    public void onReload() {
         this.config = Nucleus.getNucleus().getInternalServiceManager().getServiceUnchecked(ChatConfigAdapter.class)
                 .getNodeOrDefault();
     }

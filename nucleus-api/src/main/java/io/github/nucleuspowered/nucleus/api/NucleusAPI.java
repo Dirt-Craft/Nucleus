@@ -7,6 +7,7 @@ package io.github.nucleuspowered.nucleus.api;
 import io.github.nucleuspowered.nucleus.api.service.NucleusAFKService;
 import io.github.nucleuspowered.nucleus.api.service.NucleusAPIMetaService;
 import io.github.nucleuspowered.nucleus.api.service.NucleusBackService;
+import io.github.nucleuspowered.nucleus.api.service.NucleusFreezePlayerService;
 import io.github.nucleuspowered.nucleus.api.service.NucleusHomeService;
 import io.github.nucleuspowered.nucleus.api.service.NucleusInvulnerabilityService;
 import io.github.nucleuspowered.nucleus.api.service.NucleusJailService;
@@ -137,6 +138,19 @@ public class NucleusAPI {
      */
     public static Optional<NucleusBackService> getBackService() {
         return getService(NucleusBackService.class);
+    }
+
+    /**
+     * Gets the {@link NucleusFreezePlayerService}, if it exists.
+     *
+     * <p>
+     *     Requires the "freeze-player" module.
+     * </p>
+     *
+     * @return The {@link NucleusFreezePlayerService}
+     */
+    public static Optional<NucleusFreezePlayerService> getFreezePlayerService() {
+        return getService(NucleusFreezePlayerService.class);
     }
 
     /**

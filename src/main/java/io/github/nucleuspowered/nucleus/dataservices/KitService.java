@@ -27,7 +27,8 @@ public class KitService extends AbstractService<KitConfigDataNode> {
     }
 
     public Set<String> getKitNames(boolean showHidden) {
-        return this.data.getKits().entrySet().stream().filter(x -> showHidden || !x.getValue().hidden)
+        return this.data.getKits().entrySet().stream()
+                .filter(x -> showHidden || (!x.getValue().hidden && !x.getValue().firstJoin))
                     .map(Map.Entry::getKey).collect(ImmutableSet.toImmutableSet());
     }
 

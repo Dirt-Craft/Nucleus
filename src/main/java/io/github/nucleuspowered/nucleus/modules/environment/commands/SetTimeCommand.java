@@ -4,12 +4,12 @@
  */
 package io.github.nucleuspowered.nucleus.modules.environment.commands;
 
-import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.Util;
 import io.github.nucleuspowered.nucleus.argumentparsers.WorldTimeArgument;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.Permissions;
 import io.github.nucleuspowered.nucleus.internal.annotations.command.RegisterCommand;
 import io.github.nucleuspowered.nucleus.internal.command.AbstractCommand;
+import io.github.nucleuspowered.nucleus.internal.command.NucleusParameters;
 import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEquivalent;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
@@ -29,26 +29,25 @@ import java.util.function.LongFunction;
 @NonnullByDefault
 public class SetTimeCommand extends AbstractCommand<CommandSource> {
     private final String time = "time";
-    private final String world = "world";
 
     @Override
     public CommandElement[] getArguments() {
         return new CommandElement[] {
-            GenericArguments.optionalWeak(GenericArguments.onlyOne(GenericArguments.world(Text.of(this.world)))),
+            NucleusParameters.OPTIONAL_WEAK_WORLD_PROPERTIES_ENABLED_ONLY,
             GenericArguments.onlyOne(new WorldTimeArgument(Text.of(this.time)))
         };
     }
 
     @Override
     public CommandResult executeCommand(CommandSource src, CommandContext args, Cause cause) {
-        WorldProperties pr = getWorldPropertiesOrDefault(src, this.world, args);
+        WorldProperties pr = getWorldPropertiesOrDefault(src, NucleusParameters.Keys.WORLD, args);
 
-        LongFunction<Long> tick = args.<LongFunction<Long>>getOne(this.time).get();
+        LongFunction<Long> tick = args.requireOne(this.time);
         long time = tick.apply(pr.getWorldTime());
         pr.setWorldTime(time);
-        src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.settime.done2",
+        sendMessageTo(src, "command.settime.done2",
                 pr.getWorldName(),
-                String.valueOf(Util.getTimeFromTicks(time))));
+                Util.getTimeFromTicks(time));
         return CommandResult.success();
     }
 }
