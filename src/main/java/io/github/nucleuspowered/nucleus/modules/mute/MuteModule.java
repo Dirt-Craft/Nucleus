@@ -24,7 +24,7 @@ import uk.co.drnaylor.quickstart.annotations.ModuleData;
 
 import java.util.Map;
 import java.util.Optional;
-
+/*
 @ModuleData(id = MuteModule.ID, name = "Mute")
 public class MuteModule extends ConfigurableModule<MuteConfigAdapter> implements MessageProviderTrait, InternalServiceManagerTrait {
 
@@ -81,3 +81,4 @@ public class MuteModule extends ConfigurableModule<MuteConfigAdapter> implements
                 .build();
     }
 }
+ */

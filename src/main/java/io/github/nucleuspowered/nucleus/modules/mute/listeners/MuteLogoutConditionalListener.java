@@ -6,7 +6,7 @@ package io.github.nucleuspowered.nucleus.modules.mute.listeners;
 
 import io.github.nucleuspowered.nucleus.Nucleus;
 import io.github.nucleuspowered.nucleus.internal.interfaces.ListenerBase;
-import io.github.nucleuspowered.nucleus.modules.mute.MuteModule;
+//import io.github.nucleuspowered.nucleus.modules.mute.MuteModule;
 import io.github.nucleuspowered.nucleus.modules.mute.config.MuteConfig;
 import io.github.nucleuspowered.nucleus.modules.mute.config.MuteConfigAdapter;
 import io.github.nucleuspowered.nucleus.modules.mute.datamodules.MuteUserDataModule;
@@ -26,7 +26,7 @@ public class MuteLogoutConditionalListener implements ListenerBase.Conditional {
     }
 
     @Override public boolean shouldEnable() {
-        return Nucleus.getNucleus().getConfigValue(MuteModule.ID, MuteConfigAdapter.class, MuteConfig::isMuteOnlineOnly).orElse(false);
+        return Nucleus.getNucleus().getConfigValue("MuteModule.ID", MuteConfigAdapter.class, MuteConfig::isMuteOnlineOnly).orElse(false);
     }
 
 }

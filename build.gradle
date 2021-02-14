@@ -114,7 +114,7 @@ repositories {
     jcenter()
     maven {
         name 'Sponge maven repo'
-        url 'http://repo.spongepowered.org/maven'
+        url 'https://repo.spongepowered.org/repository/maven-public/'
     }
     maven {
         name 'drnaylor-minecraft'
@@ -130,14 +130,15 @@ repositories {
 }
 
 dependencies {
+    compile fileTree(dir: 'libraries', include: '*.jar')
     compile project(":nucleus-ap")
     compile project(":nucleus-api", {
         ext.versionno = versionno
         ext.suffix = suffix
     })
     compile "org.spongepowered:spongeapi:" + project.ext.spongeapi
-    compile qsmlDep
-    compile neutrinoDep
+    //compile qsmlDep
+    //compile neutrinoDep
 
     testCompile "junit:junit:4.12"
     testCompile "org.mockito:mockito-all:1.10.19"

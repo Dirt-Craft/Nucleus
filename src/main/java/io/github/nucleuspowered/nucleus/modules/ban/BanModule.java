@@ -19,8 +19,7 @@ import org.spongepowered.api.util.ban.Ban;
 import uk.co.drnaylor.quickstart.annotations.ModuleData;
 
 import java.util.Optional;
-
-@ModuleData(id = "ban", name = "Bans")
+/*
 public class BanModule extends ConfigurableModule<BanConfigAdapter> {
 
     @Override
@@ -60,3 +59,5 @@ public class BanModule extends ConfigurableModule<BanConfigAdapter> {
           });
     }
 }
+
+        */

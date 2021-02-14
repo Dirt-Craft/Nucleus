@@ -7,7 +7,7 @@ package io.github.nucleuspowered.nucleus.modules.nameban;
 import io.github.nucleuspowered.nucleus.internal.qsml.module.ConfigurableModule;
 import io.github.nucleuspowered.nucleus.modules.nameban.config.NameBanConfigAdapter;
 import uk.co.drnaylor.quickstart.annotations.ModuleData;
-
+/*
 @ModuleData(id = "nameban", name = "Name Banning")
 public class NameBanModule extends ConfigurableModule<NameBanConfigAdapter> {
 
@@ -16,3 +16,5 @@ public class NameBanModule extends ConfigurableModule<NameBanConfigAdapter> {
     }
 
 }
+
+ */
