@@ -224,7 +224,7 @@ task cleanJars {
 }
 
 task copyJars(type: Copy, dependsOn: ':nucleus-api:build') {
-    from([project(":nucleus-api").jar, project(":nucleus-api").javadocJar, shadowJar])
+    from([project(":nucleus-api").jar, shadowJar])
     into project.file('output')
 }
 
