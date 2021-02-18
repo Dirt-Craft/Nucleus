@@ -69,7 +69,7 @@ jar {
 }
 
 artifacts {
-    archives javadocJar
+    //archives javadocJar
     archives jar
     archives sourcesJar
 }
