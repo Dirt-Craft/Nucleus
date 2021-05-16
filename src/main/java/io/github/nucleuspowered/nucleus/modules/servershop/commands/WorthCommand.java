@@ -69,6 +69,7 @@ public class WorthCommand extends AbstractCommand<CommandSource> {
 
         Player player = (Player) src;
         int quantity = player.getItemInHand(HandTypes.MAIN_HAND).get().getQuantity();
+        if(quantity == 0) quantity++;
 
         String price = this.econHelper.getCurrencySymbol(node.getServerBuyPrice() * quantity);
 
@@ -78,11 +79,11 @@ public class WorthCommand extends AbstractCommand<CommandSource> {
                         "&6&l" + quantity + " &b" + player.getItemInHand(HandTypes.MAIN_HAND).get().getType().getName() + "&7's are worth &a$" + price));
             } else {
                 src.sendMessage(Util.format(
-                        "&7A &b" + player.getItemInHand(HandTypes.MAIN_HAND).get().getType().getName() + "&7 is worth &a$" + price));
+                        "&7A &b" + itemID + "&7 is worth &a$" + price));
             }
         } else {
             src.sendMessage(Util.format(
-                    "&b" + player.getItemInHand(HandTypes.MAIN_HAND).get().getType().getName() + "&7 does &cnot&7 have a worth set!" +
+                    "&b" + itemID + "&7 does &cnot&7 have a worth set!" +
                             "\nContact a moderator or above to set one!"));
         }
 
