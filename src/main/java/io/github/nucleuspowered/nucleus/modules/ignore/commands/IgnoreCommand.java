@@ -16,6 +16,7 @@ import io.github.nucleuspowered.nucleus.internal.docgen.annotations.EssentialsEq
 import io.github.nucleuspowered.nucleus.internal.permissions.PermissionInformation;
 import io.github.nucleuspowered.nucleus.internal.permissions.SuggestedLevel;
 import io.github.nucleuspowered.nucleus.modules.ignore.datamodules.IgnoreUserDataModule;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.args.CommandElement;
@@ -78,6 +79,7 @@ public class IgnoreCommand extends AbstractCommand<Player> {
             inu.removeFromIgnoreList(target.getUniqueId());
             src.sendMessage(Nucleus.getNucleus().getMessageProvider().getTextMessageWithFormat("command.ignore.remove", target.getName()));
         }
+        Sponge.getCommandManager().process(src, String.format("ultimatechat ignore player %s", target.getName())); // Also ignores them in Global Chat
 
         return CommandResult.success();
     }

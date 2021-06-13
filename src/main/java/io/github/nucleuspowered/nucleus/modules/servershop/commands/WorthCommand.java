@@ -70,7 +70,7 @@ public class WorthCommand extends AbstractCommand<CommandSource> {
         Player player = (Player) src;
         int quantity = player.getItemInHand(HandTypes.MAIN_HAND).get().getQuantity();
         if(quantity == 0) quantity++;
-        
+
         String price = this.econHelper.getCurrencySymbol(node.getServerBuyPrice() * quantity);
 
         if (buyPrice > 0 || sellPrice > 0) {
